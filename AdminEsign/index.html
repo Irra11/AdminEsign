@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <title>Irra Admin | Manage Orders</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        body { background: #f0f2f5; font-family: 'Hanuman', serif; padding: 20px; }
+        
+        /* Login Overlay Style */
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #f0f2f5; display: flex; justify-content: center;
+            align-items: center; z-index: 10000;
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); width: 100%; max-width: 380px; text-align: center;
+        }
+
+        /* Hide main content initially */
+        #mainDashboard { display: none; }
+
+        .card { border-radius: 15px; border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+        .status-completed { color: #27ae60; font-weight: bold; background: #eafaf1; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; }
+        .status-failed { color: #e74c3c; font-weight: bold; background: #fdedec; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; }
+        .status-pending { color: #f39c12; font-weight: bold; background: #fef9e7; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; }
+        .btn-action { margin-right: 5px; border-radius: 8px; transition: 0.2s; color: white; }
+        .btn-action:hover { transform: translateY(-2px); opacity: 0.9; color: white; }
+
+        .clock-box {
+            background: #fff; padding: 10px 20px; border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); display: inline-block; border-left: 5px solid #0d6efd;
+        }
+        #khmerTime { font-weight: bold; color: #0d6efd; font-size: 1.2rem; }
+
+        .search-container { max-width: 400px; position: relative; }
+        .search-container input { border-radius: 12px; padding-left: 40px; border: 2px solid #ddd; transition: 0.3s; }
+        .search-container i { position: absolute; left: 15px; top: 12px; color: #888; }
+
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.6); display: none;
+            justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px);
+        }
+        .modal-content { background: white; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; }
+    </style>
+</head>
+<body>
+
+<!-- Login Panel -->
+<div id="loginOverlay">
+    <div class="login-card animate__animated animate__fadeInDown">
+        <div class="mb-4">
+            <i class="fas fa-lock text-primary" style="font-size: 50px;"></i>
+        </div>
+        <h4 class="fw-bold mb-3">Admin Login</h4>
+        <input type="password" id="adminPassInput" class="form-control mb-3 text-center" placeholder="បញ្ចូលលេខសម្ងាត់..." style="border-radius: 10px; padding: 12px;">
+        <button onclick="handleLogin()" class="btn btn-primary w-100 py-2" style="border-radius: 10px; font-weight: bold;">ចូលប្រើប្រាស់</button>
+        <p id="loginError" class="text-danger mt-3" style="display: none; font-size: 14px;">លេខសម្ងាត់មិនត្រឹមត្រូវ!</p>
+    </div>
+</div>
+
+<!-- Main Dashboard -->
+<div id="mainDashboard" class="container-fluid animate__animated animate__fadeIn">
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-content animate__animated animate__zoomIn">
+            <div id="modalIcon" style="font-size: 50px; margin-bottom: 15px;"></div>
+            <h3 id="modalTitle" style="font-weight: 700;">ចំណងជើង</h3>
+            <p id="modalBody" style="color: #7f8c8d;">ខ្លឹមសារសារ...</p>
+            <div id="inputContainer" style="display: none;">
+                <input type="text" id="modalInput" class="form-control mb-3" style="border-radius: 10px;">
+            </div>
+            <div class="modal-footer d-flex justify-content-center border-0">
+                <button onclick="closeCustomModal()" class="btn btn-light" style="border-radius: 10px; margin-right: 10px;">បោះបង់</button>
+                <button id="modalConfirmBtn" class="btn btn-primary" style="border-radius: 10px;">យល់ព្រម</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="d-flex justify-content-between align-items-end mb-4 flex-wrap">
+        <div>
+            <h2 class="fw-bold m-0"><i class="fas fa-tasks text-primary"></i> គ្រប់គ្រងការបញ្ជាទិញ</h2>
+            <div class="mt-2 clock-box"><i class="far fa-clock text-muted"></i> ម៉ោងនៅកម្ពុជា៖ <span id="khmerTime">--:--:--</span></div>
+        </div>
+        
+        <div class="d-flex align-items-center gap-3 mt-3">
+            <div class="search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" class="form-control" placeholder="ស្វែងរកតាម Gmail..." onkeyup="filterOrders()">
+            </div>
+            <button onclick="fetchOrders()" class="btn btn-dark btn-lg" style="border-radius: 12px;"><i class="fas fa-sync-alt"></i></button>
+            <button onclick="logout()" class="btn btn-danger btn-lg" style="border-radius: 12px;"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </div>
+
+    <!-- Table Section -->
+    <div class="card p-3 shadow-sm">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>កាលបរិច្ឆេទ (ម៉ោងខ្មែរ)</th>
+                        <th>Gmail ភ្ញៀវ</th>
+                        <th>ឈ្មោះ Skin</th>
+                        <th>តម្លៃ</th>
+                        <th>ស្ថានភាព</th>
+                        <th>សកម្មភាព</th>
+                    </tr>
+                </thead>
+                <tbody id="orderList">
+                    <tr><td colspan="6" class="text-center p-5">កំពុងទាញយកទិន្នន័យ...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = "https://adminpanel-jtf9.onrender.com/api";
+    let allOrders = [];
+
+    // --- ១. Security & Auth Logic ---
+    function getStoredPass() { return sessionStorage.getItem('admin_password'); }
+
+    async function handleLogin() {
+        const password = document.getElementById('adminPassInput').value;
+        const errorMsg = document.getElementById('loginError');
+        
+        try {
+            const res = await fetch(`${API}/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
+            });
+
+            if (res.ok) {
+                sessionStorage.setItem('admin_password', password);
+                checkAuthStatus();
+            } else {
+                errorMsg.style.display = 'block';
+                document.getElementById('adminPassInput').value = '';
+            }
+        } catch (e) { alert("Server connection failed."); }
+    }
+
+    function checkAuthStatus() {
+        const pass = getStoredPass();
+        if (pass) {
+            document.getElementById('loginOverlay').style.display = 'none';
+            document.getElementById('mainDashboard').style.display = 'block';
+            fetchOrders();
+            setInterval(fetchOrders, 40000);
+        }
+    }
+
+    function logout() {
+        sessionStorage.removeItem('admin_password');
+        location.reload();
+    }
+
+    // --- ២. Time Logic ---
+    function updateKhmerTime() {
+        const now = new Date();
+        document.getElementById('khmerTime').innerText = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Phnom_Penh', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+        }).format(now);
+    }
+    setInterval(updateKhmerTime, 1000);
+
+    // --- ៣. API Interaction with Auth Header ---
+    async function fetchOrders() {
+        const password = getStoredPass();
+        try {
+            const res = await fetch(`${API}/admin/orders`, {
+                headers: { 'x-admin-password': password }
+            });
+            if (res.status === 401) return logout();
+            allOrders = await res.json();
+            displayOrders(allOrders);
+        } catch (err) { console.error(err); }
+    }
+
+    function displayOrders(orders) {
+        const list = document.getElementById('orderList');
+        list.innerHTML = '';
+        if (orders.length === 0) {
+            list.innerHTML = '<tr><td colspan="6" class="text-center p-5 text-muted">រកមិនឃើញទិន្នន័យឡើយ</td></tr>';
+            return;
+        }
+        orders.forEach(o => {
+            let badge = `<span class="status-pending">Pending</span>`;
+            if(o.status === 'Completed') badge = `<span class="status-completed">Completed</span>`;
+            if(o.status === 'Failed') badge = `<span class="status-failed">Failed</span>`;
+
+            list.innerHTML += `
+            <tr class="animate__animated animate__fadeIn">
+                <td><small class="text-muted">${o.timestamp}</small></td>
+                <td><strong>${o.gmail}</strong></td>
+                <td><span class="badge bg-dark">${o.skin_name}</span></td>
+                <td><span class="text-primary fw-bold">${o.amount}</span></td>
+                <td>${badge}</td>
+                <td>
+                    <button onclick="sendSuccess('${o.id}', '${o.gmail}')" class="btn btn-sm btn-success btn-action"><i class="fas fa-check"></i></button>
+                    <button onclick="sendFailed('${o.id}', '${o.gmail}')" class="btn btn-sm btn-warning btn-action"><i class="fas fa-times"></i></button>
+                    <button onclick="editOrder('${o.id}', '${o.gmail}', '${o.skin_name}', '${o.amount}')" class="btn btn-sm btn-info btn-action"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteOrder('${o.id}')" class="btn btn-sm btn-danger btn-action"><i class="fas fa-trash"></i></button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function filterOrders() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = allOrders.filter(order => order.gmail.toLowerCase().includes(searchTerm));
+        displayOrders(filtered);
+    }
+
+    async function editOrder(id, oldGmail, oldSkin, oldAmount) {
+        const password = getStoredPass();
+        const newGmail = prompt("កែប្រែ Gmail:", oldGmail); if (newGmail === null) return;
+        const newSkin = prompt("កែប្រែឈ្មោះ Skin:", oldSkin); if (newSkin === null) return;
+        const newAmount = prompt("កែប្រែតម្លៃ:", oldAmount); if (newAmount === null) return;
+
+        try {
+            await fetch(`${API}/admin/edit-order`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-admin-password': password 
+                },
+                body: JSON.stringify({ id, gmail: newGmail, skin_name: newSkin, amount: newAmount })
+            });
+            fetchOrders();
+        } catch (err) { alert("Error updating!"); }
+    }
+
+    async function deleteOrder(id) {
+        const password = getStoredPass();
+        if(confirm("តើអ្នកច្បាស់ទេថានឹងលុបទិន្នន័យនេះ?")) {
+            await fetch(`${API}/admin/delete-order`, {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'x-admin-password': password 
+                },
+                body: JSON.stringify({ id })
+            });
+            fetchOrders();
+        }
+    }
+
+    async function postResponse(id, gmail, message, subject) {
+        const password = getStoredPass();
+        await fetch(`${API}/admin/send-response`, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'x-admin-password': password 
+            },
+            body: JSON.stringify({ id, gmail, message, subject })
+        });
+        fetchOrders();
+    }
+
+    // --- ៤. Modal & Helpers ---
+    function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
+    function showModal({ title, body, icon, showInput, confirmText, color }) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('customModal');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            const inputContainer = document.getElementById('inputContainer');
+            const modalInput = document.getElementById('modalInput');
+            
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerText = body;
+            document.getElementById('modalIcon').innerHTML = icon;
+            document.getElementById('modalIcon').style.color = color;
+            confirmBtn.innerText = confirmText || "យល់ព្រម";
+            confirmBtn.style.backgroundColor = color;
+            confirmBtn.style.borderColor = color;
+
+            inputContainer.style.display = showInput ? 'block' : 'none';
+            modal.style.display = 'flex';
+            confirmBtn.onclick = () => {
+                const value = showInput ? modalInput.value.trim() : true;
+                if (showInput && !value) return;
+                modal.style.display = 'none';
+                resolve(value);
+            };
+        });
+    }
+
+    async function sendSuccess(id, gmail) {
+        const link = await showModal({
+            title: "បញ្ចប់ការលក់", body: `បញ្ចូល Link សម្រាប់ផ្ញើទៅ: ${gmail}`,
+            icon: '<i class="fas fa-gift"></i>', showInput: true, confirmText: "ផ្ញើ Link", color: "#27ae60"
+        });
+        if (link) postResponse(id, gmail, `ការទិញជោគជ័យ ✅\n🔗 Link: ${link}`, "ការទិញជោគជ័យ ✅");
+    }
+
+    async function sendFailed(id, gmail) {
+        const ok = await showModal({
+            title: "បដិសេធ", body: `ផ្ញើសារ 'បរាជ័យ' ទៅកាន់: ${gmail}?`,
+            icon: '<i class="fas fa-times-circle"></i>', showInput: false, confirmText: "ផ្ញើសារ", color: "#f39c12"
+        });
+ if (ok) {
+            const subject = "ការទិញរបស់អ្នកបានបរាជ័យ ❌";
+            const msg = `ការទិញរបស់អ្នកបានបរាជ័យ ❌\n\nសូមជម្រាបជូន,\n• ការបញ្ជាទិញរបស់អ្នកត្រូវបានបដិសេធ ដោយសារមិនមានការបង់ប្រាក់ត្រឹមត្រូវ។\n\nសូមព្យាយាមម្ដងទៀត ឬទាក់ទងមកកាន់យើងខ្ញុំ!`;
+            postResponse(id, gmail, msg, subject);
+    }
+
+    // Initialization
+    window.onload = function() {
+        updateKhmerTime();
+        checkAuthStatus();
+    };
+
+    // Allow Enter key to login
+    document.getElementById('adminPassInput').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') handleLogin();
+    });
+</script>
+</body>
+</html>
+
