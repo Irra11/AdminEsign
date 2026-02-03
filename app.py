@@ -12,11 +12,15 @@ from bson import ObjectId
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# --- ១. ការកំណត់ LOGO, API KEY និង ADMIN PASSWORD ---
+# --- ១. ការកំណត់ LOGO, API KEY, PASSWORD និង TELEGRAM ---
 SHOP_LOGO_URL = "https://i.pinimg.com/736x/93/1a/b7/931ab7b0393dab7b07fedb2b22b70a89.jpg"
 RESEND_API_KEY = "re_M8VwiPH6_CYEbbqfg6nG737BEqR9nNWD5"
 resend.api_key = RESEND_API_KEY
-ADMIN_PASSWORD = "Irra@4455$" # សម្រាប់ Login Admin Panel
+ADMIN_PASSWORD = "Irra@4455$" 
+
+# ព័ត៌មាន Telegram Bot
+TELE_TOKEN = "8379666289:AAEiYiFzSf4rkkP6g_u_13vbrv0ILi9eh4o"
+TELE_CHAT_ID = "5007619095"
 
 # --- ២. DATABASE SETUP ---
 MONGO_URI = "mongodb+srv://Esign:Kboy@@4455@cluster0.4havjl6.mongodb.net/?appName=Cluster0"
@@ -35,6 +39,19 @@ def get_khmer_time():
     khmer_tz = timezone(timedelta(hours=7))
     return datetime.now(khmer_tz).strftime("%d-%b-%Y %I:%M %p")
 
+def send_telegram_alert(message):
+    """មុខងារសម្រាប់ផ្ញើសារទៅកាន់ Telegram"""
+    url = f"https://api.telegram.org/bot{TELE_TOKEN}/sendMessage"
+    payload = {
+        "chat_id": TELE_CHAT_ID,
+        "text": message,
+        "parse_mode": "HTML"
+    }
+    try:
+        requests.post(url, json=payload)
+    except Exception as e:
+        print(f"Telegram Alert Error: {e}")
+
 @app.route('/')
 def status():
     return jsonify({"status": "Backend Live", "time": get_khmer_time()})
@@ -49,6 +66,8 @@ def verify_payment():
     try:
         email = request.form.get('email')
         udid = request.form.get('udid')
+        price = request.form.get('price', '10') # យកតម្លៃពី Web
+        plan = request.form.get('plan', 'Standard')
         file = request.files.get('receipt')
         
         order_id = str(uuid.uuid4())[:8].upper()
@@ -59,6 +78,8 @@ def verify_payment():
             "order_id": order_id, 
             "email": email, 
             "udid": udid,
+            "price": price,
+            "plan": plan,
             "status": "pending", 
             "download_link": None, 
             "receipt_url": f"/uploads/{filename}",
@@ -66,28 +87,35 @@ def verify_payment():
         }
         orders_col.insert_one(order_data)
 
-        # Telegram Notification
+        # Telegram Notification (New Order)
         host_url = request.host_url.replace("http://", "https://")
         receipt_link = f"{host_url.rstrip('/')}/uploads/{filename}"
-        msg = f"🔔 <b>NEW ORDER</b>\n\n🆔 ID: {order_id}\n📧 Email: {email}\n📱 UDID: {udid}\n🖼️ <a href='{receipt_link}'>View Receipt</a>"
-        requests.post(f"https://api.telegram.org/bot8379666289:AAEiYiFzSf4rkkP6g_u_13vbrv0ILi9eh4o/sendMessage", 
-                      json={"chat_id": "5007619095", "text": msg, "parse_mode": "HTML"})
+        
+        alert_msg = (
+            f"🔔 <b>NEW ORDER RECEIVED</b>\n\n"
+            f"🆔 ID: <code>{order_id}</code>\n"
+            f"📧 Email: {email}\n"
+            f"📱 UDID: <code>{udid}</code>\n"
+            f"💰 Price: ${price} ({plan})\n"
+            f"⏰ Time: {get_khmer_time()}\n\n"
+            f"🖼️ <a href='{receipt_link}'>View Receipt Image</a>"
+        )
+        send_telegram_alert(alert_msg)
         
         return jsonify({"success": True, "order_id": order_id})
     except Exception as e:
         return jsonify({"success": False, "msg": str(e)}), 500
 
-# --- ៥. មុខងារ Admin (Orders List & Auth) ---
+# --- ៥. មុខងារ Admin (Auth & Orders List) ---
 @app.route('/api/admin/login', methods=['POST'])
 def admin_login():
     data = request.json
-    if data.get('password') == ADMIN_PASSWORD:
+    if data and data.get('password') == ADMIN_PASSWORD:
         return jsonify({"success": True}), 200
     return jsonify({"success": False}), 401
 
 @app.route('/api/orders', methods=['GET'])
 def get_orders():
-    # ឆែក Password ពី Header (Security)
     client_pass = request.headers.get('x-admin-password')
     if client_pass != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
@@ -96,7 +124,7 @@ def get_orders():
     for o in all_orders: o['_id'] = str(o['_id'])
     return jsonify(all_orders)
 
-# --- ៦. មុខងារផ្ញើ EMAIL ជាមួយ Style Professional ---
+# --- ៦. មុខងារផ្ញើ EMAIL ឆ្លើយតប ---
 @app.route('/api/send-email', methods=['POST'])
 def api_send_email():
     client_pass = request.headers.get('x-admin-password')
@@ -110,47 +138,30 @@ def api_send_email():
     order = orders_col.find_one({"order_id": oid})
     if not order: return jsonify({"success": False, "msg": "Order not found"}), 404
 
-    # រៀបចំ HTML Body ស្អាត (Circle Logo + Khmer Font)
+    # HTML Email Template
     html_body = f"""
-    <!DOCTYPE html>
     <html>
-    <head>
-        <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet">
-    </head>
+    <head><link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet"></head>
     <body style="margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Arial', sans-serif;">
-        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: #f4f7f6; padding: 30px 0;">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding: 30px 0;">
             <tr>
                 <td align="center">
                     <table width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 25px; overflow: hidden; box-shadow: 0 15px 45px rgba(0,0,0,0.1); border-spacing: 0;">
                         <tr>
                             <td align="center" style="background-color: #27ae60; padding: 50px 20px;">
-                                <div style="display: inline-block; padding: 5px; background: rgba(255,255,255,0.2); border-radius: 50%; margin-bottom: 20px;">
-                                    <img src="{SHOP_LOGO_URL}" width="85" height="85" style="display: block; border-radius: 50%; object-fit: cover; border: 3px solid #ffffff;">
-                                </div>
-                                <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-family: 'Hanuman', serif;">ការបញ្ជាទិញជោគជ័យ ✅</h1>
-                                <p style="margin: 10px 0 0 0; color: #ffffff; opacity: 0.85; font-size: 14px;">លេខរៀងបញ្ជាទិញ: #{oid}</p>
+                                <img src="{SHOP_LOGO_URL}" width="85" height="85" style="border-radius: 50%; border: 3px solid #ffffff;">
+                                <h1 style="color: #ffffff; font-size: 24px; font-family: 'Hanuman', serif;">ការបញ្ជាទិញជោគជ័យ ✅</h1>
+                                <p style="color: #ffffff; opacity: 0.85;">ID: #{oid}</p>
                             </td>
                         </tr>
                         <tr>
-                            <td style="padding: 45px 40px; background-color: #ffffff;">
-                                <h2 style="margin: 0 0 25px 0; font-size: 20px; color: #333333; font-family: 'Hanuman', serif;">សូមជម្រាបជូនអតិថិជន!</h2>
-                                <div style="font-size: 16px; line-height: 1.8; color: #555555; font-family: 'Hanuman', serif;">
-                                    ការបញ្ជាទិញវិញ្ញាបនបត្រ iOS (Certificate) របស់អ្នកត្រូវបានបញ្ចប់។<br>
-                                    សូមចុចប៊ូតុងខាងក្រោមដើម្បីទាញយក៖
+                            <td style="padding: 45px 40px;">
+                                <h2 style="font-family: 'Hanuman', serif;">សូមជម្រាបជូនអតិថិជន!</h2>
+                                <p style="font-family: 'Hanuman', serif; line-height: 1.8;">វិញ្ញាបនបត្រ iOS (Certificate) របស់អ្នកត្រូវបានបញ្ចប់។ សូមចុចប៊ូតុងខាងក្រោមដើម្បីទាញយក៖</p>
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <a href="{download_link}" style="background-color: #27ae60; color: #ffffff; padding: 18px 35px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Download Certificate</a>
                                 </div>
-                                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin-top: 40px;">
-                                    <tr>
-                                        <td align="center">
-                                            <a href="{download_link}" style="background-color: #27ae60; color: #ffffff; padding: 18px 35px; text-decoration: none; border-radius: 15px; font-weight: bold; display: inline-block; font-size: 16px;">Download Certificate</a>
-                                        </td>
-                                    </tr>
-                                </table>
-                                <div style="margin-top: 50px; padding-top: 25px; border-top: 1px solid #eeeeee; text-align: center;">
-                                    <p style="margin: 0; font-size: 13px; color: #aaaaaa;">
-                                        This is an automated message. Please do not reply.<br>
-                                        ទាក់ទងតាម Telegram: https://t.me/irra_11
-                                    </p>
-                                </div>
+                                <p style="margin-top: 40px; font-size: 12px; color: #aaa; text-align: center;">This is an automated message. Do not reply.</p>
                             </td>
                         </tr>
                     </table>
@@ -162,15 +173,27 @@ def api_send_email():
     """
 
     try:
-        r = resend.Emails.send({
+        resend.Emails.send({
             "from": "Irra Store <admin@irra.store>",
             "to": [order['email']],
             "subject": f"Your iOS Certificate is Ready! - {oid}",
             "html": html_body
         })
-        # Update Status
+        
+        # Update Status ក្នុង Database
         orders_col.update_one({"order_id": oid}, {"$set": {"download_link": download_link, "status": "completed"}})
-        return jsonify({"success": True, "resend_id": r.get("id")})
+        
+        # Telegram Notification (Order Completed)
+        completion_msg = (
+            f"✅ <b>ORDER COMPLETED</b>\n\n"
+            f"🆔 ID: <code>{oid}</code>\n"
+            f"📧 Sent to: {order['email']}\n"
+            f"🔗 Link: <a href='{download_link}'>Download Page</a>\n"
+            f"📢 Status: Email Sent Successfully"
+        )
+        send_telegram_alert(completion_msg)
+        
+        return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "msg": str(e)}), 500
 
