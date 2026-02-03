@@ -23,7 +23,7 @@ TELE_TOKEN = "8379666289:AAEiYiFzSf4rkkP6g_u_13vbrv0ILi9eh4o"
 TELE_CHAT_ID = "5007619095"
 
 # --- ២. DATABASE SETUP ---
-MONGO_URI = "mongodb+srv://Esign:Kboy@@4455@cluster0.4havjl6.mongodb.net/?appName=Cluster0"
+MONGO_URI = "mongodb+srv://Esign:Kboy%40%404455@cluster0.4havjl6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 client = MongoClient(MONGO_URI)
 db = client['irra_esign_db']
 orders_col = db['orders']
@@ -208,3 +208,4 @@ def delete_order(order_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
