@@ -23,7 +23,7 @@ TELE_TOKEN = "8379666289:AAEiYiFzSf4rkkP6g_u_13vbrv0ILi9eh4o"
 TELE_CHAT_ID = "5007619095"
 
 # --- ២. DATABASE SETUP ---
-MONGO_URI = "mongodb+srv://Esign:Kboy%40%404455@cluster0.4havjl6.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI = "mongodb+srv://Esign:Kboy@@4455@cluster0.4havjl6.mongodb.net/?appName=Cluster0"
 client = MongoClient(MONGO_URI)
 db = client['irra_esign_db']
 orders_col = db['orders']
@@ -124,7 +124,8 @@ def get_orders():
     for o in all_orders: o['_id'] = str(o['_id'])
     return jsonify(all_orders)
 
-# --- ៦. មុខងារផ្ញើ EMAIL ឆ្លើយតប ---
+# --- កែប្រែក្នុងផ្នែក @app.route('/api/send-email', methods=['POST']) ---
+
 @app.route('/api/send-email', methods=['POST'])
 def api_send_email():
     client_pass = request.headers.get('x-admin-password')
@@ -138,30 +139,98 @@ def api_send_email():
     order = orders_col.find_one({"order_id": oid})
     if not order: return jsonify({"success": False, "msg": "Order not found"}), 404
 
-    # HTML Email Template
+    # ព័ត៌មានបន្ថែមសម្រាប់បង្ហាញក្នុង Email
+    price = order.get('price', '10.00')
+    plan = order.get('plan', 'Standard Package')
+    udid = order.get('udid', 'N/A')
+    email_user = order.get('email', 'Valued Customer')
+
+    # HTML Email Template ថ្មី (Professional Style)
     html_body = f"""
+    <!DOCTYPE html>
     <html>
-    <head><link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&display=swap" rel="stylesheet"></head>
-    <body style="margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Arial', sans-serif;">
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    </head>
+    <body style="margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Inter', sans-serif; color: #333;">
         <table width="100%" border="0" cellspacing="0" cellpadding="0" style="padding: 30px 0;">
             <tr>
                 <td align="center">
-                    <table width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 25px; overflow: hidden; box-shadow: 0 15px 45px rgba(0,0,0,0.1); border-spacing: 0;">
+                    <table width="100%" style="max-width: 600px; background-color: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border-spacing: 0;">
+                        <!-- Header -->
                         <tr>
-                            <td align="center" style="background-color: #27ae60; padding: 50px 20px;">
-                                <img src="{SHOP_LOGO_URL}" width="85" height="85" style="border-radius: 50%; border: 3px solid #ffffff;">
-                                <h1 style="color: #ffffff; font-size: 24px; font-family: 'Hanuman', serif;">ការបញ្ជាទិញជោគជ័យ ✅</h1>
-                                <p style="color: #ffffff; opacity: 0.85;">ID: #{oid}</p>
+                            <td align="center" style="background-color: #27ae60; padding: 40px 20px;">
+                                <div style="display: inline-block; padding: 5px; background: rgba(255,255,255,0.2); border-radius: 50%; margin-bottom: 15px;">
+                                    <img src="{SHOP_LOGO_URL}" width="70" height="70" style="display: block; border-radius: 50%; border: 3px solid #ffffff;">
+                                </div>
+                                <h2 style="margin: 0; color: #ffffff; font-size: 20px; letter-spacing: 0.5px;">Order Completed</h2>
+                                <p style="margin: 5px 0 0 0; color: #ffffff; opacity: 0.9; font-size: 13px;">Device Registration Enabled</p>
                             </td>
                         </tr>
+                        
+                        <!-- Content -->
                         <tr>
-                            <td style="padding: 45px 40px;">
-                                <h2 style="font-family: 'Hanuman', serif;">សូមជម្រាបជូនអតិថិជន!</h2>
-                                <p style="font-family: 'Hanuman', serif; line-height: 1.8;">វិញ្ញាបនបត្រ iOS (Certificate) របស់អ្នកត្រូវបានបញ្ចប់។ សូមចុចប៊ូតុងខាងក្រោមដើម្បីទាញយក៖</p>
-                                <div style="text-align: center; margin-top: 30px;">
-                                    <a href="{download_link}" style="background-color: #27ae60; color: #ffffff; padding: 18px 35px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block;">Download Certificate</a>
+                            <td style="padding: 40px 30px;">
+                                <h3 style="margin: 0 0 15px 0; color: #2c3e50;">Dear {email_user.split('@')[0]},</h3>
+                                <p style="font-size: 15px; line-height: 1.6; color: #555;">We are pleased to inform you that your order has been successfully completed and your device registration has been enabled.</p>
+                                
+                                <!-- Payment & Order Info Table -->
+                                <table width="100%" style="margin-top: 25px; border-collapse: collapse; font-size: 14px;">
+                                    <tr>
+                                        <td colspan="2" style="padding: 10px 0; border-bottom: 2px solid #f4f7f6; font-weight: bold; color: #27ae60; text-transform: uppercase;">Payment Details</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 0; color: #777;">Payment Amount:</td>
+                                        <td align="right" style="font-weight: 600;">${price}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 0; color: #777;">Payment Method:</td>
+                                        <td align="right" style="font-weight: 600;">ABA KHQR (Verified)</td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td colspan="2" style="padding: 25px 0 10px 0; border-bottom: 2px solid #f4f7f6; font-weight: bold; color: #27ae60; text-transform: uppercase;">Order Details</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 0; color: #777;">Order ID:</td>
+                                        <td align="right" style="font-weight: 600;">#{oid}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 0; color: #777;">Package:</td>
+                                        <td align="right" style="font-weight: 600;">{plan}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 0; color: #777;">Device UDID:</td>
+                                        <td align="right" style="font-size: 12px; font-family: monospace; background: #f8f9fa; padding: 4px 8px; border-radius: 4px;">{udid}</td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 0; color: #777;">Buy Method:</td>
+                                        <td align="right" style="font-weight: 600;">Online Instant Delivery</td>
+                                    </tr>
+                                    <tr style="background-color: #f9f9f9;">
+                                        <td style="padding: 15px 10px; font-weight: bold; font-size: 16px;">Total Amount:</td>
+                                        <td align="right" style="padding: 15px 10px; font-weight: 800; font-size: 20px; color: #2c3e50;">${price}</td>
+                                    </tr>
+                                </table>
+
+                                <!-- Button -->
+                                <div style="text-align: center; margin-top: 40px;">
+                                    <a href="{download_link}" style="background-color: #27ae60; color: #ffffff; padding: 18px 35px; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 16px; box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);">Download Certificate</a>
                                 </div>
-                                <p style="margin-top: 40px; font-size: 12px; color: #aaa; text-align: center;">This is an automated message. Do not reply.</p>
+
+                                <div style="margin-top: 50px; padding-top: 25px; border-top: 1px solid #eeeeee; text-align: center;">
+                                    <p style="margin: 0; font-size: 13px; color: #999;">
+                                        If you have any questions, contact us on <a href="https://t.me/irra_11" style="color: #27ae60; text-decoration: none; font-weight: bold;">Telegram</a><br><br>
+                                        <i>This is an automated message, please do not reply.</i>
+                                    </p>
+                                </div>
+                            </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                            <td align="center" style="background-color: #f9f9f9; padding: 20px; color: #aaa; font-size: 11px;">
+                                © 2026 Irra Store. Cambodia's Leading iOS Solutions.
                             </td>
                         </tr>
                     </table>
@@ -176,22 +245,15 @@ def api_send_email():
         resend.Emails.send({
             "from": "Irra Store <admin@irra.store>",
             "to": [order['email']],
-            "subject": f"Your iOS Certificate is Ready! - {oid}",
+            "subject": f"Order Completed - Device Registration Enabled",
             "html": html_body
         })
         
-        # Update Status ក្នុង Database
+        # Update Status
         orders_col.update_one({"order_id": oid}, {"$set": {"download_link": download_link, "status": "completed"}})
         
-        # Telegram Notification (Order Completed)
-        completion_msg = (
-            f"✅ <b>ORDER COMPLETED</b>\n\n"
-            f"🆔 ID: <code>{oid}</code>\n"
-            f"📧 Sent to: {order['email']}\n"
-            f"🔗 Link: <a href='{download_link}'>Download Page</a>\n"
-            f"📢 Status: Email Sent Successfully"
-        )
-        send_telegram_alert(completion_msg)
+        # Telegram Success
+        send_telegram_alert(f"✅ <b>SENT SUCCESS</b>\nID: {oid}\nEmail: {order['email']}\nUDID: {udid}")
         
         return jsonify({"success": True})
     except Exception as e:
@@ -208,4 +270,3 @@ def delete_order(order_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
-
