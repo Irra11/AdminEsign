@@ -115,9 +115,16 @@ def get_orders():
 def update_order():
     if request.headers.get('x-admin-password') != ADMIN_PASSWORD:
         return jsonify({"error": "Unauthorized"}), 401
+    
     data = request.json
     oid = data.get('order_id')
-    orders_col.update_one({"order_id": oid}, {"$set": {"email": data.get('email'), "udid": data.get('udid')}})
+    new_email = data.get('email')
+    new_link = data.get('link') # ទទួលយក link ជំនួស udid
+    
+    orders_col.update_one(
+        {"order_id": oid}, 
+        {"$set": {"email": new_email, "download_link": new_link}}
+    )
     return jsonify({"success": True})
 
 # --- ៦. មុខងារផ្ញើ Email ជាមួយ Template ថ្មី ---
@@ -212,4 +219,5 @@ def delete_order(order_id):
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
+
 
