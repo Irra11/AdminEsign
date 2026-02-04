@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Irra Admin | Manage Esign Orders</title>
+
+    <!-- External CSS Dependencies -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --dark-bg: #f8f9fa;
+        }
+
+        body { 
+            background: var(--dark-bg); 
+            font-family: 'Inter', 'Hanuman', serif; 
+            margin: 0; 
+            padding-top: 80px; 
+        }
+
+        #toastContainer { position: fixed; top: 20px; right: 20px; z-index: 20000; }
+        .custom-toast {
+            background: white; padding: 15px 25px; border-radius: 18px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 15px; min-width: 300px;
+            border-left: 6px solid var(--primary-color);
+        }
+        .toast-success { border-left-color: var(--success-color); }
+        .toast-error { border-left-color: var(--danger-color); }
+
+        #loginOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #ffffff; display: flex; justify-content: center; align-items: center; z-index: 10000;
+        }
+        .login-card {
+            background: white; padding: 40px; border-radius: 30px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1); width: 90%; max-width: 380px; text-align: center;
+        }
+        .login-logo { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary-color); margin-bottom: 20px; }
+
+        .main-header {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 999;
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0,0,0,0.08); padding: 12px 20px;
+        }
+        .header-container { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+        .admin-logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--primary-color); margin-right: 12px; }
+        .store-name { font-weight: 700; font-size: 1.1rem; margin: 0; color: #333; }
+        .clock-box { background: #f1f3f5; padding: 6px 15px; border-radius: 50px; color: var(--primary-color); font-weight: 700; font-size: 0.85rem; display: flex; align-items: center; gap: 8px; }
+
+        .action-bar { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: flex; gap: 10px; }
+        .search-container { position: relative; flex-grow: 1; }
+        .search-container input { border-radius: 12px; padding: 12px 12px 12px 45px; border: 1px solid #ddd; width: 100%; font-size: 16px; outline: none; }
+        .search-container i { position: absolute; left: 18px; top: 16px; color: #aaa; }
+        .btn-sync { width: 50px; height: 50px; border-radius: 12px; border: 1px solid #ddd; background: white; color: var(--primary-color); }
+
+        .table-card { background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin: 0 15px; overflow: hidden; }
+        .status-completed { color: #27ae60; font-weight: bold; background: #eafaf1; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; text-transform: uppercase; }
+        .status-pending { color: #f39c12; font-weight: bold; background: #fef9e7; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; text-transform: uppercase; }
+        
+        /* Action Buttons */
+        .btn-action { width: 34px; height: 34px; border-radius: 8px; border: none; color: white; margin: 2px; transition: 0.2s; font-size: 14px; }
+        .btn-action:active { transform: scale(0.9); }
+        .bg-warning-custom { background-color: var(--warning-color); }
+
+        @media (max-width: 768px) {
+            .table-responsive thead { display: none; }
+            .table-responsive tr { display: block; background: white; margin-bottom: 12px; border-radius: 15px; padding: 15px; border: 1px solid #eee; }
+            .table-responsive td { display: flex; justify-content: space-between; align-items: center; padding: 8px 0 !important; border: none; border-bottom: 1px solid #f8f9fa; }
+            .table-responsive td:last-child { border: none; justify-content: center; gap: 5px; padding-top: 15px !important; }
+            .table-responsive td::before { content: attr(data-label); font-weight: bold; color: #888; font-size: 0.8rem; }
+            .btn-action { width: 42px !important; height: 42px !important; }
+        }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; justify-content: center; align-items: center; z-index: 10001; backdrop-filter: blur(5px); }
+        .modal-content-custom { background: white; padding: 35px; border-radius: 30px; width: 90%; max-width: 420px; text-align: center; }
+        
+        .form-edit-group { text-align: left; margin-bottom: 15px; }
+        .form-edit-group label { font-size: 12px; font-weight: 700; color: #666; margin-bottom: 5px; display: block; }
+        .form-edit-group input { border-radius: 10px; padding: 10px; border: 1px solid #ddd; width: 100%; font-size: 14px; }
+
+        #mainDashboard { display: none; }
+    </style>
+</head>
+<body>
+
+<div id="toastContainer"></div>
+
+<div id="loginOverlay">
+    <div class="login-card animate__animated animate__fadeInDown">
+        <img src="https://i.pinimg.com/736x/93/1a/b7/931ab7b0393dab7b07fedb2b22b70a89.jpg" class="login-logo" alt="Logo">
+        <h4 class="fw-bold mb-1">IRRA STORE</h4>
+        <input type="password" id="adminPassInput" class="form-control mb-4 text-center border-0 bg-light" placeholder="លេខសម្ងាត់..." style="padding: 15px; border-radius: 15px;">
+        <button onclick="handleLogin()" class="btn btn-primary w-100 py-3 fw-bold shadow-sm" style="border-radius: 15px;">ចូលប្រព័ន្ធ</button>
+    </div>
+</div>
+
+<div id="mainDashboard">
+    <header class="main-header">
+        <div class="header-container">
+            <div class="header-left">
+                <img src="https://i.pinimg.com/736x/93/1a/b7/931ab7b0393dab7b07fedb2b22b70a89.jpg" class="admin-logo" alt="Logo">
+                <h1 class="store-name">IRRA STORE ADMIN</h1>
+            </div>
+            <div class="header-right d-flex align-items-center gap-2">
+                <div class="clock-box"><i class="far fa-clock"></i> <span id="khmerTime">--:--:--</span></div>
+                <button onclick="logout()" class="btn btn-light rounded-circle border shadow-sm" style="width: 40px; height: 40px;"><i class="fas fa-power-off text-danger"></i></button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Modal System -->
+    <div id="customModal" class="modal-overlay">
+        <div class="modal-content-custom animate__animated animate__zoomIn">
+            <div id="modalIcon" style="font-size: 50px; margin-bottom: 15px;"></div>
+            <h5 id="modalTitle" class="fw-bold mb-2"></h5>
+            <p id="modalBody" class="text-muted mb-4 small"></p>
+            
+            <!-- Link Input (For Approve) -->
+            <div id="inputContainer" style="display: none;">
+                <input type="text" id="modalInput" class="form-control mb-4 text-center" placeholder="បញ្ចូល Link ផលិតផល..." style="border-radius: 15px; padding: 12px; border: 1px solid #eee;">
+            </div>
+
+            <!-- Edit Form (For Edit Email and Download Link) -->
+            <div id="editContainer" style="display: none;">
+                <div class="form-edit-group">
+                    <label>GMAIL / EMAIL ADDRESS</label>
+                    <input type="text" id="editEmail" placeholder="example@gmail.com">
+                </div>
+                <div class="form-edit-group">
+                    <label>DOWNLOAD LINK</label>
+                    <input type="text" id="editLink" placeholder="https://example.com/file">
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-center gap-2 mt-2">
+                <button onclick="closeCustomModal()" class="btn btn-light px-4 py-2 border-0" style="border-radius: 12px;">បោះបង់</button>
+                <button id="modalConfirmBtn" class="btn btn-primary px-4 py-2" style="border-radius: 12px;">យល់ព្រម</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <div class="search-container">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="ស្វែងរកតាម Gmail ឬ UDID..." onkeyup="filterOrders()">
+        </div>
+        <button onclick="fetchOrders()" class="btn-sync"><i class="fas fa-rotate"></i></button>
+    </div>
+
+    <div class="table-card">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle m-0">
+                <thead class="bg-light d-none d-md-table-header-group">
+                    <tr>
+                        <th class="ps-4 py-3">កាលបរិច្ឆេទ</th>
+                        <th>User Information</th>
+                        <th>Device UDID</th>
+                        <th>ស្ថានភាព</th>
+                        <th class="text-center">សកម្មភាព</th>
+                    </tr>
+                </thead>
+                <tbody id="orderList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = "https://adminesign.onrender.com"; 
+    let allOrders = [];
+
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `custom-toast animate__animated animate__fadeInRight toast-${type}`;
+        const icon = type === 'success' ? 'fa-check-circle text-success' : 'fa-exclamation-circle text-danger';
+        toast.innerHTML = `<div class="toast-icon"><i class="fas ${icon}"></i></div><div><div style="font-weight:bold;font-size:14px">${type==='success'?'ជោគជ័យ':'មានបញ្ហា'}</div><div style="font-size:13px;color:#666">${message}</div></div>`;
+        container.appendChild(toast);
+        setTimeout(() => { toast.classList.replace('animate__fadeInRight', 'animate__fadeOutRight'); setTimeout(() => toast.remove(), 500); }, 3000);
+    }
+
+    function getStoredPass() { return sessionStorage.getItem('admin_password'); }
+
+    async function handleLogin() {
+        const password = document.getElementById('adminPassInput').value;
+        try {
+            const res = await fetch(`${API_BASE}/api/admin/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password }) });
+            if (res.ok) { sessionStorage.setItem('admin_password', password); checkAuthStatus(); }
+            else showToast("លេខសម្ងាត់មិនត្រឹមត្រូវ!", "error");
+        } catch (err) { showToast("Server Error", "error"); }
+    }
+
+    function checkAuthStatus() {
+        const pass = getStoredPass();
+        if (pass) { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('mainDashboard').style.display = 'block'; fetchOrders(); setInterval(fetchOrders, 30000); }
+    }
+
+    function logout() { sessionStorage.removeItem('admin_password'); location.reload(); }
+
+    function updateKhmerTime() {
+        const now = new Date();
+        document.getElementById('khmerTime').innerText = new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Phnom_Penh', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).format(now);
+    }
+    setInterval(updateKhmerTime, 1000);
+
+    async function fetchOrders() {
+        const password = getStoredPass(); if(!password) return;
+        try {
+            const res = await fetch(`${API_BASE}/api/orders`, { headers: { 'x-admin-password': password } });
+            if (res.status === 401) return logout();
+            allOrders = await res.json(); displayOrders(allOrders);
+        } catch (err) { console.error(err); }
+    }
+
+    function displayOrders(orders) {
+        const list = document.getElementById('orderList');
+        list.innerHTML = '';
+        orders.forEach(o => {
+            const statusClass = o.status === 'completed' ? 'status-completed' : 'status-pending';
+            list.innerHTML += `
+            <tr class="animate__animated animate__fadeIn">
+                <td data-label="កាលបរិច្ឆេទ" class="ps-md-4 small text-muted">${o.timestamp || 'N/A'}</td>
+                <td data-label="ព័ត៌មាន">
+                    <div style="font-size:0.85rem">👤 <b>${o.email}</b></div>
+                    <div style="font-size:0.85rem; color:#888;">${o.plan || 'Standard'} ($${o.price})</div>
+                </td>
+                <td data-label="UDID"><code style="font-size:0.75rem; color: #d63384; background: #fdf2f8; padding: 3px 8px; border-radius: 5px;">${o.udid}</code></td>
+                <td data-label="ស្ថានភាព"><span class="${statusClass}">${o.status}</span></td>
+                <td class="text-center">
+                    <button onclick="approveOrder('${o.order_id}', '${o.email}')" class="btn-action bg-success" title="Send Link"><i class="fas fa-paper-plane"></i></button>
+                    <button onclick="editOrder('${o.order_id}', '${o.email}', '${o.download_link || ''}')" class="btn-action bg-warning-custom" title="Edit Order"><i class="fas fa-pen-to-square"></i></button>
+                    <button onclick="window.open('${API_BASE + o.receipt_url}', '_blank')" class="btn-action bg-primary" title="Receipt"><i class="fas fa-image"></i></button>
+                    <button onclick="deleteOrder('${o.order_id}')" class="btn-action bg-secondary" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            </tr>`;
+        });
+    }
+
+    function filterOrders() {
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        displayOrders(allOrders.filter(o => o.email.toLowerCase().includes(term) || o.udid.toLowerCase().includes(term)));
+    }
+
+    async function approveOrder(oid, email) {
+        const link = await showModal({ title: "បញ្ជូនផលិតផល", body: `ផ្ញើ Link ទៅកាន់: ${email}`, icon: '<i class="fas fa-paper-plane text-success"></i>', mode: 'input', color: "#27ae60" });
+        if (link && link.trim() !== "") {
+            const password = getStoredPass(); showToast("កំពុងផ្ញើ...");
+            const res = await fetch(`${API_BASE}/api/send-email`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': password }, body: JSON.stringify({ order_id: oid, link: link }) });
+            if(res.ok) { showToast("ផ្ញើរួចរាល់"); fetchOrders(); }
+            else showToast("បរាជ័យ", "error");
+        }
+    }
+
+    async function editOrder(oid, email, link) {
+        // បំពេញតម្លៃបច្ចុប្បន្នចូលក្នុង Input
+        document.getElementById('editEmail').value = email;
+        document.getElementById('editLink').value = link;
+
+        const result = await showModal({
+            title: "កែប្រែទិន្នន័យ",
+            body: `ID: ${oid}`,
+            icon: '<i class="fas fa-pen-to-square text-warning"></i>',
+            mode: 'edit',
+            color: "#f39c12"
+        });
+
+        if (result) {
+            const newEmail = document.getElementById('editEmail').value;
+            const newLink = document.getElementById('editLink').value;
+            const password = getStoredPass();
+
+            showToast("កំពុងរក្សាទុក...");
+            try {
+                const res = await fetch(`${API_BASE}/api/update-order`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+                    body: JSON.stringify({ order_id: oid, email: newEmail, link: newLink })
+                });
+                if(res.ok) { showToast("កែប្រែជោគជ័យ"); fetchOrders(); }
+                else showToast("មិនអាចកែប្រែបានទេ", "error");
+            } catch(e) { showToast("Error connecting to server", "error"); }
+        }
+    }
+
+    async function deleteOrder(oid) {
+        const confirmed = await showModal({ title: "លុបទិន្នន័យ", body: "តើអ្នកច្បាស់ទេថានឹងលុបការបញ្ជាទិញនេះ?", icon: '<i class="fas fa-trash-alt text-danger"></i>', mode: 'confirm', color: "#e74c3c" });
+        if(confirmed) {
+            const password = getStoredPass();
+            await fetch(`${API_BASE}/api/delete-order/${oid}`, { method: 'DELETE', headers: { 'x-admin-password': password } });
+            showToast("បានលុបរួចរាល់"); fetchOrders();
+        }
+    }
+
+    function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
+    
+    function showModal({ title, body, icon, mode, color }) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('customModal');
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalBody').innerText = body;
+            document.getElementById('modalIcon').innerHTML = icon;
+            document.getElementById('modalConfirmBtn').style.backgroundColor = color;
+            
+            document.getElementById('inputContainer').style.display = (mode === 'input') ? 'block' : 'none';
+            document.getElementById('editContainer').style.display = (mode === 'edit') ? 'block' : 'none';
+            
+            modal.style.display = 'flex';
+            document.getElementById('modalConfirmBtn').onclick = () => {
+                let val = true;
+                if(mode === 'input') val = document.getElementById('modalInput').value;
+                modal.style.display = 'none';
+                resolve(val);
+            };
+        });
+    }
+
+    window.onload = checkAuthStatus;
+</script>
+</body>
+</html>
