@@ -208,73 +208,97 @@
 </div>
 
 <script>
-    const API_BASE = "https://adminesign.onrender.com"; 
-    let allOrders = [];
+    const API_BASE = "https://adminesign.onrender.com";
+let allOrders = [];
 
-    function toggleSidebar(show) {
-        document.getElementById('sidebar').classList.toggle('mobile-active', show);
-        document.getElementById('sidebarOverlay').classList.toggle('active', show);
-    }
+// --- ១. មុខងារជំនួយ (Helpers) ---
+function getStoredPass() {
+    return sessionStorage.getItem('admin_password');
+}
 
-    // Function to Copy UDID
-    function copyUDID(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            alert("UDID Copied to Clipboard!");
-        });
-    }
+function toggleSidebar(show) {
+    document.getElementById('sidebar').classList.toggle('mobile-active', show);
+    document.getElementById('sidebarOverlay').classList.toggle('active', show);
+}
 
-    async function handleLogin() {
-        const password = document.getElementById('adminPassInput').value;
+function copyUDID(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        alert("UDID Copied to Clipboard!");
+    });
+}
+
+function logout() {
+    sessionStorage.removeItem('admin_password');
+    location.reload();
+}
+
+// --- ២. ការពារសុវត្ថិភាព និង Login ---
+async function handleLogin() {
+    const password = document.getElementById('adminPassInput').value;
+    try {
         const res = await fetch(`${API_BASE}/api/admin/login`, {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password })
         });
-        if (res.ok) { sessionStorage.setItem('admin_password', password); checkAuthStatus(); }
-        else alert("Invalid Password");
-    }
-
-    function checkAuthStatus() {
-        if (sessionStorage.getItem('admin_password')) {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainDashboard').style.display = 'block';
-            fetchOrders();
-            setInterval(fetchOrders, 30000);
+        if (res.ok) {
+            sessionStorage.setItem('admin_password', password);
+            checkAuthStatus();
+        } else {
+            alert("លេខសម្ងាត់មិនត្រឹមត្រូវ!");
         }
+    } catch (err) {
+        alert("មិនអាចតភ្ជាប់ទៅ Server បានទេ!");
     }
+}
 
-    async function fetchOrders() {
-        const password = sessionStorage.getItem('admin_password');
-        if(!password) return;
-        try {
-            const res = await fetch(`${API_BASE}/api/orders`, { headers: { 'x-admin-password': password } });
-            if (res.status === 401) return logout();
-            allOrders = await res.json();
-            updateStats(); displayOrders(allOrders);
-        } catch (err) { console.error(err); }
+function checkAuthStatus() {
+    if (getStoredPass()) {
+        document.getElementById('loginOverlay').style.display = 'none';
+        document.getElementById('mainDashboard').style.display = 'block';
+        fetchOrders();
+        setInterval(fetchOrders, 30000);
     }
+}
 
-    function updateStats() {
-        const total = allOrders.length;
-        const completed = allOrders.filter(o => o.status === 'completed').length;
-        const revenue = allOrders.reduce((sum, o) => sum + parseFloat(o.price || 0), 0);
-        document.getElementById('statTotal').innerText = total;
-        document.getElementById('statCompleted').innerText = completed;
-        document.getElementById('statPending').innerText = total - completed;
-        document.getElementById('statRevenue').innerText = `$${revenue}`;
+// --- ៣. ការគ្រប់គ្រងទិន្នន័យ (Fetching & Stats) ---
+async function fetchOrders() {
+    const password = getStoredPass();
+    if (!password) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/orders`, {
+            headers: { 'x-admin-password': password }
+        });
+        if (res.status === 401) return logout();
+        allOrders = await res.json();
+        updateStats();
+        displayOrders(allOrders);
+    } catch (err) {
+        console.error("Fetch error:", err);
     }
+}
 
-    function displayOrders(data) {
+function updateStats() {
+    const total = allOrders.length;
+    const completed = allOrders.filter(o => o.status === 'completed').length;
+    const failed = allOrders.filter(o => o.status === 'failed').length;
+    const revenue = allOrders.reduce((sum, o) => sum + parseFloat(o.price || 0), 0);
+
+    if (document.getElementById('statTotal')) document.getElementById('statTotal').innerText = total;
+    if (document.getElementById('statCompleted')) document.getElementById('statCompleted').innerText = completed;
+    if (document.getElementById('statPending')) document.getElementById('statPending').innerText = total - (completed + failed);
+    if (document.getElementById('statRevenue')) document.getElementById('statRevenue').innerText = `$${revenue.toFixed(2)}`;
+}
+
+// --- ៤. ការបង្ហាញទិន្នន័យ និងស្វែងរក ---
+function displayOrders(data) {
     const list = document.getElementById('orderList');
     list.innerHTML = '';
 
     data.forEach(o => {
-        // កំណត់ពណ៌ Badge តាមស្ថានភាពនីមួយៗ
-        let statusClass = 'status-pending'; // លំនាំដើមពណ៌លឿង
-        if (o.status === 'completed') {
-            statusClass = 'status-completed'; // ពណ៌បៃតង
-        } else if (o.status === 'failed') {
-            statusClass = 'status-failed'; // ពណ៌ក្រហម (ត្រូវប្រាកដថាអ្នកមាន CSS សម្រាប់ class នេះ)
-        }
+        let statusClass = 'status-pending';
+        if (o.status === 'completed') statusClass = 'status-completed';
+        else if (o.status === 'failed') statusClass = 'status-failed';
 
         list.innerHTML += `
         <tr class="animate__animated animate__fadeIn">
@@ -290,180 +314,148 @@
             <td><span class="status-badge ${statusClass}">${o.status.toUpperCase()}</span></td>
             <td class="text-end">
                 <div class="d-flex justify-content-end gap-1">
-                    <!-- ប៊ូតុងយល់ព្រម (ផ្ញើ Email បៃតង) -->
-                    <button onclick="approveOrder('${o.order_id}', '${o.email}')" class="btn-action-round bg-success" title="Approve & Send Link">
-                        <i class="fas fa-check"></i>
-                    </button>
-                    
-                    <!-- ប៊ូតុងបដិសេធ (ផ្ញើ Email ក្រហម) -->
-                    <button onclick="rejectOrder('${o.order_id}', '${o.email}')" class="btn-action-round bg-danger" title="Reject Order">
-                        <i class="fas fa-times"></i>
-                    </button>
-
-                    <!-- ប៊ូតុងកែប្រែ -->
-                    <button onclick="editOrder('${o.order_id}', '${o.email}', '${o.udid}', '${o.download_link || ''}')" class="btn-action-round bg-primary" title="Edit Info">
-                        <i class="fas fa-edit"></i>
-                    </button>
-
-                    <!-- ប៊ូតុងមើលវិក្កយបត្រ -->
-                    <button onclick="window.open('${API_BASE + o.receipt_url}', '_blank')" class="btn-action-round bg-info" title="View Receipt">
-                        <i class="fas fa-eye"></i>
-                    </button>
-
-                    <!-- ប៊ូតុងលុបចោល -->
-                    <button onclick="deleteOrder('${o.order_id}')" class="btn-action-round bg-secondary" title="Delete Permanent">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <button onclick="approveOrder('${o.order_id}', '${o.email}')" class="btn-action-round bg-success" title="Approve & Send Link"><i class="fas fa-check"></i></button>
+                    <button onclick="rejectOrder('${o.order_id}', '${o.email}')" class="btn-action-round bg-danger" title="Reject Order"><i class="fas fa-times"></i></button>
+                    <button onclick="editOrder('${o.order_id}', '${o.email}', '${o.udid}', '${o.download_link || ''}')" class="btn-action-round bg-primary" title="Edit Info"><i class="fas fa-edit"></i></button>
+                    <button onclick="window.open('${API_BASE + o.receipt_url}', '_blank')" class="btn-action-round bg-info" title="View Receipt"><i class="fas fa-eye"></i></button>
+                    <button onclick="deleteOrder('${o.order_id}')" class="btn-action-round bg-secondary" title="Delete"><i class="fas fa-trash"></i></button>
                 </div>
             </td>
         </tr>`;
     });
 }
-    // New Filter Function for Search (Gmail or UDID)
-    function filterOrders() {
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = allOrders.filter(o => 
-            o.email.toLowerCase().includes(term) || 
-            o.udid.toLowerCase().includes(term)
-        );
-        displayOrders(filtered);
-    }
 
-  // --- មុខងារសម្រាប់ផ្ញើ Link ជោគជ័យ (ពណ៌បៃតង) ---
+function filterOrders() {
+    const term = document.getElementById('searchInput').value.toLowerCase();
+    const filtered = allOrders.filter(o =>
+        o.email.toLowerCase().includes(term) ||
+        o.udid.toLowerCase().includes(term)
+    );
+    displayOrders(filtered);
+}
+
+// --- ៥. សកម្មភាព (Approve, Reject, Edit, Delete) ---
 async function approveOrder(oid, email) {
-    const link = await showModal({ 
-        title: "បញ្ចប់ការបញ្ជាទិញ", 
-        body: `បញ្ចូល Link វិញ្ញាបនបត្រសម្រាប់ផ្ញើទៅ: ${email}`, 
-        icon: '<i class="fas fa-check-circle text-success"></i>', 
+    const link = await showModal({
+        title: "បញ្ចប់ការបញ្ជាទិញ",
+        body: `បញ្ចូល Link វិញ្ញាបនបត្រសម្រាប់ផ្ញើទៅ: ${email}`,
+        icon: '<i class="fas fa-check-circle text-success"></i>',
         mode: 'input',
-        confirmColor: '#27ae60' // ពណ៌បៃតង
+        confirmColor: '#27ae60'
     });
 
-    if (link && link.trim() !== "") {
+    if (link) {
         const pass = getStoredPass();
         const res = await fetch(`${API_BASE}/api/send-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-admin-password': pass },
-            body: JSON.stringify({ 
-                order_id: oid, 
-                link: link,
-                type: 'success' // ប្រាប់ទៅ Python ថាជាករណីជោគជ័យ
-            })
+            body: JSON.stringify({ order_id: oid, link: link, type: 'success' })
         });
-        if (res.ok) {
-            alert("អ៊ីមែលជោគជ័យត្រូវបានផ្ញើ!");
-            fetchOrders();
-        }
+        if (res.ok) { alert("អ៊ីមែលជោគជ័យត្រូវបានផ្ញើ!"); fetchOrders(); }
     }
 }
 
-// --- មុខងារសម្រាប់ផ្ញើសារបដិសេធ (ពណ៌ក្រហម) ---
 async function rejectOrder(oid, email) {
-    const ok = await showModal({ 
-        title: "បដិសេធការបញ្ជាទិញ", 
-        body: `តើអ្នកច្បាស់ទេថានឹងផ្ញើសារ 'បដិសេធ' ទៅកាន់: ${email}?`, 
-        icon: '<i class="fas fa-times-circle text-danger"></i>', 
+    const ok = await showModal({
+        title: "បដិសេធការបញ្ជាទិញ",
+        body: `តើអ្នកច្បាស់ទេថានឹងផ្ញើសារ 'បដិសេធ' ទៅកាន់: ${email}?`,
+        icon: '<i class="fas fa-times-circle text-danger"></i>',
         mode: 'confirm',
-        confirmColor: '#e74c3c' // ពណ៌ក្រហម
+        confirmColor: '#e74c3c'
     });
 
-    if (ok) {
+    if (ok === true) {
         const pass = getStoredPass();
         const res = await fetch(`${API_BASE}/api/send-email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-admin-password': pass },
-            body: JSON.stringify({ 
-                order_id: oid, 
-                type: 'failed' // ផ្ញើ 'failed' ដើម្បីឱ្យ Python ផ្ញើអ៊ីមែលពណ៌ក្រហម
-            })
+            body: JSON.stringify({ order_id: oid, type: 'failed' })
         });
-        if (res.ok) {
-            alert("អ៊ីមែលបដិសេធត្រូវបានផ្ញើ!");
-            fetchOrders();
-        }
+        if (res.ok) { alert("អ៊ីមែលបដិសេធត្រូវបានផ្ញើ!"); fetchOrders(); }
     }
 }
 
-// --- កែសម្រួល Function showModal ឱ្យឆ្លាតវៃជាងមុន ---
+async function editOrder(oid, email, udid, link) {
+    document.getElementById('editEmail').value = email;
+    document.getElementById('editUdid').value = udid;
+    document.getElementById('modalInput').value = link;
+
+    const result = await showModal({
+        title: "កែប្រែព័ត៌មាន",
+        body: `Order ID: ${oid}`,
+        icon: '<i class="fas fa-edit text-primary"></i>',
+        mode: 'edit',
+        confirmColor: '#6366f1'
+    });
+
+    if (result) {
+        const pass = getStoredPass();
+        await fetch(`${API_BASE}/api/update-order`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': pass },
+            body: JSON.stringify({
+                order_id: oid,
+                email: document.getElementById('editEmail').value,
+                udid: document.getElementById('editUdid').value,
+                link: document.getElementById('modalInput').value
+            })
+        });
+        fetchOrders();
+    }
+}
+
+async function deleteOrder(oid) {
+    if (!confirm("តើអ្នកច្បាស់ទេថានឹងលុបការបញ្ជាទិញនេះ?")) return;
+    const pass = getStoredPass();
+    try {
+        await fetch(`${API_BASE}/api/delete-order/${oid}`, {
+            method: 'DELETE',
+            headers: { 'x-admin-password': pass }
+        });
+        fetchOrders();
+    } catch (err) { console.error(err); }
+}
+
+// --- ៦. មុខងារបញ្ជា Modal (Merged & Fixed) ---
 function showModal({ title, body, icon, mode, confirmColor }) {
     return new Promise((resolve) => {
         const modal = document.getElementById('customModal');
         const confirmBtn = document.getElementById('modalConfirmBtn');
-        
+
         document.getElementById('modalTitle').innerText = title;
         document.getElementById('modalBody').innerText = body;
         document.getElementById('modalIcon').innerHTML = icon;
-        
-        // កំណត់ពណ៌ប៊ូតុង Confirm តាមប្រភេទ (បៃតង ឬ ក្រហម)
+
         confirmBtn.style.backgroundColor = confirmColor || '#6366f1';
 
-        // បើក/បិទ ប្រអប់បញ្ចូលតាម Mode
-        document.getElementById('inputContainer').style.display = (mode === 'input') ? 'block' : 'none';
+        // រៀបចំការបង្ហាញ Containers
+        document.getElementById('inputContainer').style.display = (mode === 'input' || mode === 'edit') ? 'block' : 'none';
         document.getElementById('editContainer').style.display = (mode === 'edit') ? 'block' : 'none';
-        
-        if(mode === 'input') document.getElementById('modalInput').value = "";
+
+        if (mode === 'input') document.getElementById('modalInput').value = "";
 
         modal.style.display = 'flex';
 
         confirmBtn.onclick = () => {
             let result = true;
             if (mode === 'input') {
-                result = document.getElementById('modalInput').value;
-                if(!result) return alert("សូមបញ្ចូល Link!");
+                result = document.getElementById('modalInput').value.trim();
+                if (!result) return alert("សូមបញ្ចូល Link!");
+            } else if (mode === 'edit') {
+                result = true; // យកតម្លៃពី Input fields ផ្ទាល់ក្នុង editOrder
             }
             modal.style.display = 'none';
             resolve(result);
         };
     });
 }
-    async function editOrder(oid, email, udid, link) {
-        document.getElementById('editEmail').value = email;
-        document.getElementById('editUdid').value = udid;
-        document.getElementById('modalInput').value = link;
-        const result = await showModal({ title: "Edit Order", body: `Editing Order ID: ${oid}`, icon: '<i class="fas fa-edit text-primary"></i>', mode: 'edit' });
-        if (result) {
-            const password = sessionStorage.getItem('admin_password');
-            await fetch(`${API_BASE}/api/update-order`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-                body: JSON.stringify({ 
-                    order_id: oid, email: document.getElementById('editEmail').value, 
-                    udid: document.getElementById('editUdid').value, link: document.getElementById('modalInput').value
-                })
-            });
-            fetchOrders();
-        }
-    }
 
-    async function deleteOrder(oid) {
-        if(confirm("Delete this order?")) {
-            const password = sessionStorage.getItem('admin_password');
-            await fetch(`${API_BASE}/api/delete-order/${oid}`, { method: 'DELETE', headers: { 'x-admin-password': password } });
-            fetchOrders();
-        }
-    }
+function closeCustomModal() {
+    document.getElementById('customModal').style.display = 'none';
+}
 
-    function logout() { sessionStorage.removeItem('admin_password'); location.reload(); }
-    function closeCustomModal() { document.getElementById('customModal').style.display = 'none'; }
-
-    function showModal({ title, body, icon, mode }) {
-        return new Promise((resolve) => {
-            const modal = document.getElementById('customModal');
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalBody').innerText = body;
-            document.getElementById('modalIcon').innerHTML = icon;
-            document.getElementById('inputContainer').style.display = (mode === 'input' || mode === 'edit') ? 'block' : 'none';
-            document.getElementById('editContainer').style.display = (mode === 'edit') ? 'block' : 'none';
-            modal.style.display = 'flex';
-            document.getElementById('modalConfirmBtn').onclick = () => {
-                let val = (mode === 'input' || mode === 'edit') ? document.getElementById('modalInput').value : true;
-                modal.style.display = 'none';
-                resolve(val);
-            };
-        });
-    }
-
-    window.onload = checkAuthStatus;
+// ចាប់ផ្ដើមដំណើរការ
+window.onload = checkAuthStatus;
 </script>
 </body>
 </html>
