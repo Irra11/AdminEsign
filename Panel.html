@@ -311,6 +311,19 @@
         }
     }
 
+// ក្នុង Admin HTML សម្រាប់ប៊ូតុង X (Failed)
+async function sendFailed(oid, email) {
+    const password = getStoredPass();
+    if(confirm("តើអ្នកច្បាស់ទេថានឹងបដិសេធ?")) {
+        await fetch(`${API}/api/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
+            body: JSON.stringify({ order_id: oid, type: 'failed' }) // បន្ថែម type: 'failed'
+        });
+        fetchOrders();
+    }
+}
+    
     async function editOrder(oid, email, udid, link) {
         document.getElementById('editEmail').value = email;
         document.getElementById('editUdid').value = udid;
