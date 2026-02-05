@@ -299,19 +299,33 @@
         displayOrders(filtered);
     }
 
-    // Approve, Edit, Delete Functions
-    async function approveOrder(oid, email) {
-        const link = await showModal({ title: "Approve Order", body: `Send Link to: ${email}`, icon: '<i class="fas fa-paper-plane text-success"></i>', mode: 'input' });
-        if (link) {
-            const password = sessionStorage.getItem('admin_password');
-            await fetch(`${API_BASE}/api/send-email`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-                body: JSON.stringify({ order_id: oid, link: link })
-            });
+  // --- មុខងារសម្រាប់ផ្ញើ Link ជោគជ័យ (ពណ៌បៃតង) ---
+async function approveOrder(oid, email) {
+    const link = await showModal({ 
+        title: "បញ្ចប់ការបញ្ជាទិញ", 
+        body: `បញ្ចូល Link វិញ្ញាបនបត្រសម្រាប់ផ្ញើទៅ: ${email}`, 
+        icon: '<i class="fas fa-check-circle text-success"></i>', 
+        mode: 'input',
+        confirmColor: '#27ae60' // ពណ៌បៃតង
+    });
+
+    if (link && link.trim() !== "") {
+        const pass = getStoredPass();
+        const res = await fetch(`${API_BASE}/api/send-email`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': pass },
+            body: JSON.stringify({ 
+                order_id: oid, 
+                link: link,
+                type: 'success' // ប្រាប់ទៅ Python ថាជាករណីជោគជ័យ
+            })
+        });
+        if (res.ok) {
+            alert("អ៊ីមែលជោគជ័យត្រូវបានផ្ញើ!");
             fetchOrders();
         }
     }
-
+}
 
 // --- មុខងារសម្រាប់ផ្ញើសារបដិសេធ (ពណ៌ក្រហម) ---
 async function rejectOrder(oid, email) {
@@ -338,6 +352,39 @@ async function rejectOrder(oid, email) {
             fetchOrders();
         }
     }
+}
+
+// --- កែសម្រួល Function showModal ឱ្យឆ្លាតវៃជាងមុន ---
+function showModal({ title, body, icon, mode, confirmColor }) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('customModal');
+        const confirmBtn = document.getElementById('modalConfirmBtn');
+        
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalBody').innerText = body;
+        document.getElementById('modalIcon').innerHTML = icon;
+        
+        // កំណត់ពណ៌ប៊ូតុង Confirm តាមប្រភេទ (បៃតង ឬ ក្រហម)
+        confirmBtn.style.backgroundColor = confirmColor || '#6366f1';
+
+        // បើក/បិទ ប្រអប់បញ្ចូលតាម Mode
+        document.getElementById('inputContainer').style.display = (mode === 'input') ? 'block' : 'none';
+        document.getElementById('editContainer').style.display = (mode === 'edit') ? 'block' : 'none';
+        
+        if(mode === 'input') document.getElementById('modalInput').value = "";
+
+        modal.style.display = 'flex';
+
+        confirmBtn.onclick = () => {
+            let result = true;
+            if (mode === 'input') {
+                result = document.getElementById('modalInput').value;
+                if(!result) return alert("សូមបញ្ចូល Link!");
+            }
+            modal.style.display = 'none';
+            resolve(result);
+        };
+    });
 }
     async function editOrder(oid, email, udid, link) {
         document.getElementById('editEmail').value = email;
