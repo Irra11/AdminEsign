@@ -93,6 +93,10 @@
         }
 
         #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f7fe; display: flex; justify-content: center; align-items: center; z-index: 10001; }
+        .status-failed {
+    background: #fdedec;
+    color: #e74c3c;
+}
     </style>
 </head>
 <body>
@@ -260,36 +264,61 @@
     }
 
     function displayOrders(data) {
-        const list = document.getElementById('orderList');
-        list.innerHTML = '';
-        data.forEach(o => {
-            const statusClass = o.status === 'completed' ? 'status-completed' : 'status-pending';
-            list.innerHTML += `
-            <tr>
-                <td>
-                    <span class="gmail-text">${o.email}</span>
-                    <span class="time-text"><i class="far fa-clock"></i> ${o.timestamp || 'N/A'}</span>
-                    <div class="udid-badge" onclick="copyUDID('${o.udid}')" title="Click to copy full UDID">
-                        <i class="far fa-copy"></i> ${o.udid.substring(0, 16)}...
-                    </div>
-                </td>
-                <td class="d-md-table-cell d-none"><code style="font-size:11px;">${o.udid}</code></td>
-                <td class="fw-bold">$${o.price || '10'}</td>
-                <td><span class="status-badge ${statusClass}">${o.status}</span></td>
-                <td class="text-end">
-                    <div class="d-flex justify-content-end gap-1">
-                      // ក្នុង function displayOrders
-<button onclick="approveOrder('${o.order_id}', '${o.email}')" class="btn-action-round bg-success"><i class="fas fa-check"></i></button>
-<button onclick="rejectOrder('${o.order_id}', '${o.email}')" class="btn-action-round bg-danger"><i class="fas fa-times"></i></button>
-                        <button onclick="editOrder('${o.order_id}', '${o.email}', '${o.udid}', '${o.download_link || ''}')" class="btn-action-round bg-primary"><i class="fas fa-edit"></i></button>
-                        <button onclick="window.open('${API_BASE + o.receipt_url}', '_blank')" class="btn-action-round bg-info"><i class="fas fa-eye"></i></button>
-                        <button onclick="deleteOrder('${o.order_id}')" class="btn-action-round bg-danger"><i class="fas fa-trash"></i></button>
-                    </div>
-                </td>
-            </tr>`;
-        });
-    }
+    const list = document.getElementById('orderList');
+    list.innerHTML = '';
 
+    data.forEach(o => {
+        // កំណត់ពណ៌ Badge តាមស្ថានភាពនីមួយៗ
+        let statusClass = 'status-pending'; // លំនាំដើមពណ៌លឿង
+        if (o.status === 'completed') {
+            statusClass = 'status-completed'; // ពណ៌បៃតង
+        } else if (o.status === 'failed') {
+            statusClass = 'status-failed'; // ពណ៌ក្រហម (ត្រូវប្រាកដថាអ្នកមាន CSS សម្រាប់ class នេះ)
+        }
+
+        list.innerHTML += `
+        <tr class="animate__animated animate__fadeIn">
+            <td>
+                <span class="gmail-text">${o.email}</span>
+                <span class="time-text"><i class="far fa-clock"></i> ${o.timestamp || 'N/A'}</span>
+                <div class="udid-badge" onclick="copyUDID('${o.udid}')" title="Click to copy full UDID">
+                    <i class="far fa-copy"></i> ${o.udid.substring(0, 16)}...
+                </div>
+            </td>
+            <td class="d-md-table-cell d-none"><code style="font-size:11px;">${o.udid}</code></td>
+            <td class="fw-bold">$${o.price || '10.00'}</td>
+            <td><span class="status-badge ${statusClass}">${o.status.toUpperCase()}</span></td>
+            <td class="text-end">
+                <div class="d-flex justify-content-end gap-1">
+                    <!-- ប៊ូតុងយល់ព្រម (ផ្ញើ Email បៃតង) -->
+                    <button onclick="approveOrder('${o.order_id}', '${o.email}')" class="btn-action-round bg-success" title="Approve & Send Link">
+                        <i class="fas fa-check"></i>
+                    </button>
+                    
+                    <!-- ប៊ូតុងបដិសេធ (ផ្ញើ Email ក្រហម) -->
+                    <button onclick="rejectOrder('${o.order_id}', '${o.email}')" class="btn-action-round bg-danger" title="Reject Order">
+                        <i class="fas fa-times"></i>
+                    </button>
+
+                    <!-- ប៊ូតុងកែប្រែ -->
+                    <button onclick="editOrder('${o.order_id}', '${o.email}', '${o.udid}', '${o.download_link || ''}')" class="btn-action-round bg-primary" title="Edit Info">
+                        <i class="fas fa-edit"></i>
+                    </button>
+
+                    <!-- ប៊ូតុងមើលវិក្កយបត្រ -->
+                    <button onclick="window.open('${API_BASE + o.receipt_url}', '_blank')" class="btn-action-round bg-info" title="View Receipt">
+                        <i class="fas fa-eye"></i>
+                    </button>
+
+                    <!-- ប៊ូតុងលុបចោល -->
+                    <button onclick="deleteOrder('${o.order_id}')" class="btn-action-round bg-secondary" title="Delete Permanent">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    });
+}
     // New Filter Function for Search (Gmail or UDID)
     function filterOrders() {
         const term = document.getElementById('searchInput').value.toLowerCase();
