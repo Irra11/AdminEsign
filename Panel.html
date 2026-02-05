@@ -312,19 +312,33 @@
         }
     }
 
-// ក្នុង Admin HTML សម្រាប់ប៊ូតុង X (Failed)
-async function sendFailed(oid, email) {
-    const password = getStoredPass();
-    if(confirm("តើអ្នកច្បាស់ទេថានឹងបដិសេធ?")) {
-        await fetch(`${API}/api/send-email`, {
+
+// --- មុខងារសម្រាប់ផ្ញើសារបដិសេធ (ពណ៌ក្រហម) ---
+async function rejectOrder(oid, email) {
+    const ok = await showModal({ 
+        title: "បដិសេធការបញ្ជាទិញ", 
+        body: `តើអ្នកច្បាស់ទេថានឹងផ្ញើសារ 'បដិសេធ' ទៅកាន់: ${email}?`, 
+        icon: '<i class="fas fa-times-circle text-danger"></i>', 
+        mode: 'confirm',
+        confirmColor: '#e74c3c' // ពណ៌ក្រហម
+    });
+
+    if (ok) {
+        const pass = getStoredPass();
+        const res = await fetch(`${API_BASE}/api/send-email`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-password': password },
-            body: JSON.stringify({ order_id: oid, type: 'failed' }) // បន្ថែម type: 'failed'
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': pass },
+            body: JSON.stringify({ 
+                order_id: oid, 
+                type: 'failed' // ផ្ញើ 'failed' ដើម្បីឱ្យ Python ផ្ញើអ៊ីមែលពណ៌ក្រហម
+            })
         });
-        fetchOrders();
+        if (res.ok) {
+            alert("អ៊ីមែលបដិសេធត្រូវបានផ្ញើ!");
+            fetchOrders();
+        }
     }
 }
-    
     async function editOrder(oid, email, udid, link) {
         document.getElementById('editEmail').value = email;
         document.getElementById('editUdid').value = udid;
