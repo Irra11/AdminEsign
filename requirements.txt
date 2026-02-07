@@ -1,6 +1,9 @@
-flask
+Flask
 flask-cors
 pymongo
-dnspython
+requests
 resend
-gunicorn
+bakong-khqr
+qrcode
+pillow
+dnspython
