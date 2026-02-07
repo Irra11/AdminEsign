@@ -96,6 +96,7 @@ def create_payment():
             amount=10.00,       
             currency='USD',     
             store_label='Store1',
+            phone_number='85512345678', # <--- ADDED THIS LINE (REQUIRED)
             bill_number=bill_no,
             terminal_label='POS-01',
             static=False
