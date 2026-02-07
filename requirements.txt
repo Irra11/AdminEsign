@@ -7,3 +7,4 @@ bakong-khqr
 qrcode
 pillow
 dnspython
+gunicorn
