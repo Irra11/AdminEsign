@@ -14,20 +14,19 @@ from datetime import datetime, timedelta, timezone
 from bakong_khqr import KHQR
 
 app = Flask(__name__)
+# Allow all origins
 CORS(app, resources={r"/*": {"origins": "*"}})
 
 # ==========================================
-# 1. CONFIGURATION
+# 1. CREDENTIALS & SETTINGS
 # ==========================================
 TELE_TOKEN = "8379666289:AAEiYiFzSf4rkkP6g_u_13vbrv0ILi9eh4o"
 TELE_CHAT_ID = "5007619095"
 
 RESEND_API_KEY = "re_M8VwiPH6_CYEbbqfg6nG737BEqR9nNWD5"
 resend.api_key = RESEND_API_KEY
-ADMIN_PASSWORD = "Irra@4455$" 
 
-# Logo for Bakong Deeplink (REQUIRED)
-SHOP_LOGO_URL = "https://i.pinimg.com/736x/93/1a/b7/931ab7b0393dab7b07fedb2b22b70a89.jpg"
+ADMIN_PASSWORD = "Irra@4455$" 
 
 # Database
 MONGO_URI = "mongodb+srv://Esign:Kboy%40%404455@cluster0.4havjl6.mongodb.net/?appName=Cluster0"
@@ -41,8 +40,7 @@ except:
     orders_col = None
 
 # BAKONG CONFIG
-# ⚠️ If using a Personal Account token, 'check_payment' might still fail or return UNPAID.
-# But 'create_payment' will work now because we fixed the missing parameter.
+# Note: Using your provided token
 BAKONG_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiNGZiMDQwYzA3MWZhNGEwNiJ9LCJpYXQiOjE3NzA0ODM2NTYsImV4cCI6MTc3ODI1OTY1Nn0.5smV48QjYaLTDwzbjbNKBxAK5s615LvZG91nWbA7ZwY"
 MY_BANK_ACCOUNT = "bora_roeun3@aclb"
 
@@ -60,8 +58,8 @@ def send_telegram_alert(message):
         url = f"https://api.telegram.org/bot{TELE_TOKEN}/sendMessage"
         payload = {"chat_id": TELE_CHAT_ID, "text": message, "parse_mode": "HTML"}
         requests.post(url, json=payload)
-    except:
-        pass
+    except Exception as e:
+        print(f"Telegram Error: {e}")
 
 @app.route('/')
 def status():
@@ -89,7 +87,7 @@ def create_payment():
             amount=10.00,
             currency='USD',
             store_label='IrraStore',
-            phone_number='85512345678',
+            phone_number='85512345678', # Required
             bill_number=bill_no,
             terminal_label='POS-01',
             static=False
@@ -98,15 +96,7 @@ def create_payment():
         # 2. Generate MD5
         md5_hash = khqr.generate_md5(qr_string)
         
-        # 3. Generate Deeplink (FIXED: Added appIconUrl)
-        deeplink = khqr.generate_deeplink(
-            qr_string,
-            callback="https://irraesign.store",
-            appName="Irra Esign",
-            appIconUrl=SHOP_LOGO_URL  # <--- THIS WAS MISSING
-        )
-        
-        # 4. Generate Image
+        # 3. Generate Image
         qr = qrcode.QRCode(version=1, box_size=10, border=4)
         qr.add_data(qr_string)
         qr.make(fit=True)
@@ -116,6 +106,7 @@ def create_payment():
         img.save(buffered, format="PNG")
         img_base64 = base64.b64encode(buffered.getvalue()).decode('utf-8')
 
+        # 4. Save to Database
         if orders_col is not None:
             orders_col.insert_one({
                 "order_id": order_id,
@@ -131,8 +122,7 @@ def create_payment():
             "success": True,
             "order_id": order_id,
             "md5": md5_hash,
-            "qr_image": img_base64,
-            "deeplink": deeplink
+            "qr_image": img_base64
         })
 
     except Exception as e:
@@ -146,36 +136,28 @@ def check_payment(md5):
         print(f"🔍 Checking MD5: {md5}")
 
         # 1. Check Status
-        # If token is invalid (Personal Account), this might raise an error or return empty
-        payment_status = khqr.check_payment(md5)
-        print(f"📡 Status: {payment_status}")
-
-        if payment_status == "PAID":
-            payment_info = khqr.get_payment(md5)
-            
+        paid_list = khqr.check_bulk_payments([md5])
+        
+        if md5 in paid_list:
+            # Payment Success!
             if orders_col is not None:
                 order = orders_col.find_one({"md5": md5})
                 if order and order.get('status') != 'paid':
-                    orders_col.update_one({"md5": md5}, {"$set": {
-                        "status": "paid",
-                        "payment_details": payment_info
-                    }})
+                    orders_col.update_one({"md5": md5}, {"$set": {"status": "paid"}})
                     
-                    sender = payment_info.get('fromAccountId', 'Unknown')
-                    amount = payment_info.get('amount', '10.00')
+                    # Notify Admin
                     msg = (
                         f"✅ <b>PAYMENT RECEIVED</b>\n"
                         f"🆔 Order: <code>{order['order_id']}</code>\n"
-                        f"👤 Sender: {sender}\n"
-                        f"💰 Amount: ${amount}\n"
-                        f"📧 Email: {order['email']}"
+                        f"📧 Email: {order['email']}\n"
+                        f"📱 UDID: <code>{order['udid']}</code>\n"
+                        f"💰 Amount: $10.00"
                     )
                     send_telegram_alert(msg)
-
-            return jsonify({"status": "PAID", "data": payment_info})
             
-        else:
-            return jsonify({"status": "UNPAID"})
+            return jsonify({"status": "PAID"})
+            
+        return jsonify({"status": "UNPAID"})
 
     except Exception as e:
         print(f"❌ Check Error: {e}")
