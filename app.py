@@ -34,7 +34,7 @@ db = client['irra_esign_db']
 orders_col = db['orders']
 
 # YOUR REAL BAKONG TOKEN
-BAKONG_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjp7ImlkIjoiNGZiMDQwYzA3MWZhNGEwNiJ9LCJpYXQiOjE3NzA0ODM2NTYsImV4cCI6MTc3ODI1OTY1Nn0.5smV48QjYaLTDwzbjbNKBxAK5s615LvZG91nWbA7ZwY"
+BAKONG_TOKEN = "rbkcv6NTBBcPumzAJ4GDzBX6P8iKdnCZeeqFQUJF8ns79Y"
 MY_BANK_ACCOUNT = "bora_roeun3@aclb"
 
 khqr = KHQR(BAKONG_TOKEN)
@@ -225,3 +225,4 @@ def api_send_email():
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
+
