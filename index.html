@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-    <title>Irra Esign Store</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Irra Esign</title>
+     <link rel="icon" href="https://i.pinimg.com/736x/da/83/78/da8378a6ddba21823631bd644bee4266.jpg"
     
     <!-- Icons & Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Hanuman:wght@400;700&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
     
     <style>
@@ -101,6 +103,35 @@
         <div class="menu-item" onclick="showAbout()"><i class="fas fa-info-circle" style="color:#64748b"></i> <span>អំពីយើង (About)</span></div>
     </div>
 </div>
+<!-- About Modal (Popup) -->
+<div id="aboutModal" class="modal">
+    <div class="m-card animate__animated animate__zoomIn" style="max-width: 420px; text-align: left;">
+        
+        <h3 style="color:var(--primary-blue); font-family:'Hanuman'; font-weight:bold; text-align:center; margin-bottom:15px;">
+            Irra Esign Store
+        </h3>
+
+        <div style="font-size:13px; line-height:1.8; color:#334155; font-family:'Hanuman', sans-serif;">
+            <p style="margin-bottom:10px;">
+                <b>កម្មវិធី E-Sign</b> គឺជា utility app ដែលមានប្រយោជន៍សម្រាប់ (sign) ឯកសារ IPA ដោយផ្ទាល់លើឧបករណ៍ iOS ដូចជា iPhone ឬ iPad ដោយមិនចាំបាច់ប្រើកុំព្យូទ័រ។
+            </p>
+            <p style="margin-bottom:10px;">
+                វាប្រើសម្រាប់ធ្វើការ Sign ឯកសារ .ipa (iOS App files) ដើម្បីអាចដំឡើងបានលើឧបករណ៍ iOS ដែលមិនបាន Jailbreak ។
+            </p>
+            
+            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:15px 0;">
+
+            <p>
+                យើងខ្ញុំផ្ដល់ជូនសេវាកម្ម iOS Certificate (P12 & Mobileprovision) ដែលមានគុណភាពខ្ពស់ ធានាសុវត្ថិភាព និងការប្រើប្រាស់បានយូរអង្វែង។
+            </p>
+        </div>
+
+        <button onclick="closeAllModals()" class="btn-pay active" style="margin-top:25px; width:100%; border-radius:12px; font-family:'Hanuman'; font-weight:bold;">
+            យល់ព្រម
+        </button>
+
+    </div>
+</div>
 
 <!-- Main Form -->
 <div class="container">
@@ -166,7 +197,7 @@
     <div class="m-card animate__animated animate__zoomIn" style="position:relative;padding:35px 25px">
         <button onclick="closeAllModals()" style="position:absolute;top:15px;right:15px;border:none;background:#f1f5f9;color:#64748b;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;transition:.3s"><i class="fas fa-times"></i></button>
         
-        <h4 class="fw-bold mb-2" style="font-family:'Hanuman'">ស្កេនដើម្បីបង់ប្រាក់</h4>
+        <!-- <h4 style="font-family:'Hanuman';font-weight:bold;margin-bottom:5px;font-size:18px">ស្កេនដើម្បីបង់ប្រាក់</h4> -->
         <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px">តម្លៃសរុប: <b style="color:var(--primary-blue);font-size:20px">$10.00</b></p>
         
         <!-- Loading Spinner -->
@@ -184,7 +215,7 @@
         </button>
 
         <p style="font-size:12px;color:#999;margin-top:20px;line-height:1.5">
-            Support: ABA, ACLEDA, Bakong<br>
+           សូមស្កេន QR Code ជាមួយកម្មវិធីធនាគាររបស់អ្នកដើម្បីទូទាត់ប្រាក់។<br>
             ប្រព័ន្ធនឹងត្រួតពិនិត្យដោយស្វ័យប្រវត្តិ។
         </p>
     </div>
@@ -206,30 +237,13 @@
     </div>
 </div>
 
-<!-- About Modal -->
-<div id="aboutModal" class="modal">
-    <div class="m-card animate__animated animate__zoomIn" style="max-width:450px">
-        <h4 class="fw-bold mb-3" style="color:var(--primary-blue)">Irra Esign Store</h4>
-        <div style="font-size:14px;color:var(--text-muted);line-height:1.8;text-align:left">
-            <p><b>កម្មវិធី E-Sign</b> គឺជា utility app ដែលមានប្រយោជន៍សម្រាប់ (sign) ឯកសារ IPA ដោយផ្ទាល់លើឧបករណ៍ iOS ដូចជា iPhone ឬ iPad ដោយមិនចាំបាច់ប្រើកុំព្យូទ័រ។</p>
-            <hr style="border:0;border-top:1px solid #f1f5f9;margin:15px 0">
-            <p>យើងខ្ញុំផ្ដល់ជូនសេវាកម្ម iOS Certificate (P12 & Mobileprovision) ដែលមានគុណភាពខ្ពស់ ធានាសុវត្ថិភាព និងការប្រើប្រាស់បានយូរអង្វែង។</p>
-        </div>
-        <button class="btn-pay active" style="margin-top:25px;opacity:1;pointer-events:auto;width:100%;border-radius:15px" onclick="closeAllModals()">យល់ព្រម</button>
-    </div>
-</div>
-
-<footer class="footer animate__animated animate__fadeIn">
-    <p>© 2026 <b>Irra Esign</b>. All rights reserved</p>
-    <div class="footer-links"><a href="#">Terms of Service</a> <span>|</span> <a href="#">Privacy Policy</a> <span>|</span> <a href="https://t.me/irra_11">Support</a></div>
-</footer>
-
 <script>
     // ==========================================
     // 1. CONFIGURATION
     // ==========================================
-    // 👇 ត្រូវតែដាក់ Link Render ឱ្យត្រូវ (កុំប្រើ Localhost 127.0.0.1)
-    const API_BASE = "https://bakong11-1.onrender.com"; 
+    // 👇 ដាក់ Link Render របស់អ្នក (កុំប្រើ Localhost)
+    const API_BASE = "http://127.0.0.1:5000"; 
+    
     let currentOrderId = null;
 
     // ==========================================
@@ -337,7 +351,7 @@
                 document.getElementById('qrImage').src = "data:image/png;base64," + data.qr_image;
                 document.getElementById('qrImage').style.display = 'block';
                 
-                statusBox.innerText = "Please Scan to Pay";
+                statusBox.innerText = "ស្កេនដើម្បីបង់ប្រាក់";
                 statusBox.style.backgroundColor = "#e0f7fa";
                 statusBox.style.color = "#006064";
 
@@ -414,6 +428,18 @@
         if(e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) return false;
         if(e.ctrlKey && e.keyCode == 85) return false;
     };
+    // Function to Open About Modal
+function showAbout() {
+    // Close the side menu first
+    toggleMenu(false); 
+    // Open the About Modal
+    document.getElementById('aboutModal').classList.add('active');
+}
+
+// Function to Close Modal
+function closeAllModals() {
+    document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+}
 </script>
 
 </body>
