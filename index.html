@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="km">
 <head>
@@ -98,7 +100,7 @@
     <div class="menu-list">
         <a href="https://t.me/Irra_Esign/2" class="menu-item"><i class="fas fa-shopping-cart" style="color:#f59e0b"></i> <span>របៀបទិញ</span></a>
         <a href="https://t.me/Irra_Esign/3" class="menu-item"><i class="fas fa-play-circle" style="color:#e11d48"></i> <span>របៀបយក UDID</span></a> 
-        <a href="https://t.me/Irra_Esign/4" class="menu-item"><i class="fas fa-download" style="color:#10b981"></i> <span>របៀបតំឡេីង Esign</span></a>
+        <a href="https://t.me/Irra_Esign/4" class="menu-item"><i class="fas fa-download" style="color:#10b981"></i> <span>របៀប Install Esign</span></a>
         <a href="https://t.me/irra_11" class="menu-item"><i class="fab fa-telegram-plane" style="color:#0088cc"></i> <span>ទាក់ទង Admin</span></a>
         <div class="menu-item" onclick="showAbout()"><i class="fas fa-info-circle" style="color:#64748b"></i> <span>អំពីយើង (About)</span></div>
     </div>
@@ -141,9 +143,9 @@
         <p class="subtitle" style="color:#718096;font-size:14px;margin-bottom:25px">P12 & Mobileprovision</p>
         
         <div class="features" style="margin-bottom:25px;font-size:13px;text-align:left;color:#555;border:1.5px solid #edf2f7;padding:18px;border-radius:20px;background-color:#fafbfc">
-            <div style="margin-bottom:10px"><i class="fas fa-check-circle" style="color:var(--primary-blue);margin-right:8px"></i> Valid for 1 Year (365 Days)</div>
-            <div style="margin-bottom:10px"><i class="fas fa-shield-alt" style="color:var(--primary-blue);margin-right:8px"></i> 30 Days Revoke Warranty</div>
-            <div style="margin-bottom:0"><i class="fas fa-bolt" style="color:var(--primary-blue);margin-right:8px"></i> Instant Delivery via Email</div>
+            <div style="margin-bottom:10px"><i class="fas fa-check-circle" style="color:var(--primary-blue);margin-right:8px"></i> មានសុពលភាព 1 ឆ្នាំ (365 ថ្ងៃ)</div>
+            <div style="margin-bottom:10px"><i class="fas fa-shield-alt" style="color:var(--primary-blue);margin-right:8px"></i>  ធានារយៈពេល 30 ថ្ងៃ</div>
+            <div style="margin-bottom:0"><i class="fas fa-bolt" style="color:var(--primary-blue);margin-right:8px"></i>  ផ្ញើភ្លាមៗតាមអ៊ីមែល</div>
         </div>
 
         <div class="amount-box">
@@ -159,14 +161,20 @@
             </div>
         </div>
 
-        <div class="terminal">
-            <span style="font-size:8px;color:#4a5568;font-weight:700;letter-spacing:1px">DETECTED UDID</span>
-            <div style="color:#cbd5e1;font-family:'Courier New';font-size:12.5px;margin-top:5px;word-break:break-all;">
-                <span style="color:var(--primary-cyan);font-weight:700">>_</span> <span id="udidStatus">Waiting for input...</span>
-            </div>
-        </div>
+       <div class="terminal">
+    <span style="font-size:8px;color:#4a5568;font-weight:700;letter-spacing:1px">UDID ត្រូវបានរកឃើញ</span>
+    <div style="color:#cbd5e1;font-family:'Courier New';font-size:12.5px;margin-top:5px;word-break:break-all;">
+        <span style="color:var(--primary-cyan);font-weight:700">>_</span> 
+        <span id="udidStatus">កំពុងរង់ចាំការបញ្ចូល...</span>
+    </div>
+</div>
 
-        <a href="https://udid.tech/" target="_blank" class="btn-get-udid"><i class="fas fa-fingerprint"></i> ចុចទីនេះដើម្បីយក UDID</a>
+
+     <!-- UPDATE THIS LINK TO YOUR RENDER URL -->
+<a href="https://testudid.onrender.com/api/get-profile" class="btn-get-udid">
+    <i class="fas fa-download"></i> ចុចទីនេះដើម្បីយក UDID
+
+</a>
 
         <label class="terms-box">
             <input type="checkbox" id="termsCheck" onchange="validateForm()" style="width:22px;height:22px;margin-top:2px;accent-color:var(--primary-blue)"> 
@@ -236,211 +244,241 @@
         </button>
     </div>
 </div>
+    <script>
+       
+// ==========================================
+// 1. GLOBAL CONFIGURATION
+// ==========================================
+const API_BASE = "https://testudid.onrender.com"; 
+let currentOrderId = null;
 
-<script>
-    // ==========================================
-    // 1. CONFIGURATION
-    // ==========================================
-    // 👇 ដាក់ Link Render របស់អ្នក (កុំប្រើ Localhost)
-    const API_BASE = "https://bakong11-1.onrender.com"; 
-    
-    let currentOrderId = null;
+// ==========================================
+// 2. AUTO-FILL UDID ON PAGE LOAD
+// ==========================================
 
-    // ==========================================
-    // 2. UI & MENU FUNCTIONS
-    // ==========================================
-    function toggleMenu(show) {
-        const menu = document.getElementById('sideMenu');
-        const overlay = document.getElementById('menuOverlay');
-        if (show) { 
-            menu.classList.add('active'); 
-            overlay.classList.add('active'); 
-        } else { 
-            menu.classList.remove('active'); 
-            overlay.classList.remove('active'); 
-        }
-    }
+// Simple Friendly Styled Alert
+function showFriendlyAlert(message) {
 
-    function showAbout() {
-        toggleMenu(false);
-        document.getElementById('aboutModal').classList.add('active');
-    }
+    const overlay = document.createElement("div");
+    overlay.style.cssText = `
+        position:fixed;
+        top:0;left:0;
+        width:100%;height:100%;
+        background:rgba(0,0,0,0.5);
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        z-index:99999;
+    `;
 
-    function closeAllModals() {
-        document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-    }
+    const box = document.createElement("div");
+    box.style.cssText = `
+        background:#fff;
+        padding:25px 30px;
+        border-radius:20px;
+        width:320px;
+        text-align:center;
+        font-family:'Hanuman','Inter',sans-serif;
+        box-shadow:0 15px 35px rgba(0,0,0,0.2);
+        animation:fadeIn .25s ease;
+    `;
 
-    // ==========================================
-    // 3. INPUT VALIDATION
-    // ==========================================
-    function updateUDID(val) {
-        val = val.trim();
-        document.getElementById('udidInput').value = val;
-        
-        const status = document.getElementById('udidStatus');
-        
-        if (val.length > 10) {
-            status.innerText = val;
-            status.style.color = "#00bcd4";
-        } else {
-            status.innerText = "Waiting for input...";
-            status.style.color = "#64748b";
-        }
-        validateForm();
-    }
+    box.innerHTML = `
+        <div style="font-size:14px;line-height:1.6;margin-bottom:15px">
+            ${message}
+        </div>
+        <button style="
+            padding:10px 25px;
+            border:none;
+            border-radius:12px;
+            background:linear-gradient(to right,#0072b5,#00bcd4);
+            color:#fff;
+            font-weight:bold;
+            cursor:pointer;
+        ">យល់ព្រម</button>
+    `;
 
-    function validateForm() {
-        const udid = document.getElementById('udidInput').value;
-        const checked = document.getElementById('termsCheck').checked;
-        const btn = document.getElementById('payBtn');
-        
-        if (udid.length >= 20 && checked) {
-            btn.classList.add('active');
-        } else {
-            btn.classList.remove('active');
-        }
-    }
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 
-    function validateEmail() {
-        const email = document.getElementById('emailInput').value;
-        if (!email.includes('@') || !email.includes('.')) {
-            alert("សូមបញ្ចូលអ៊ីមែលឱ្យបានត្រឹមត្រូវ! (Please enter a valid email)");
-            return;
-        }
-        document.getElementById('emailModal').classList.remove('active');
-        generateQR();
-    }
-
-    // ==========================================
-    // 4. PAYMENT LOGIC
-    // ==========================================
-    async function generateQR() {
-        // UI Reset
-        document.getElementById('qrModal').classList.add('active');
-        document.getElementById('qrLoading').style.display = 'block';
-        document.getElementById('qrImage').style.display = 'none';
-        
-        // Hide manual button initially
-        const btnManual = document.getElementById('btnManual');
-        btnManual.style.display = 'none';
-        btnManual.disabled = false;
-        btnManual.innerHTML = '<i class="fas fa-check-circle"></i> ខ្ញុំបានបង់ប្រាក់រួចហើយ (Paid)';
-
-        const statusBox = document.getElementById('paymentStatus');
-        statusBox.innerText = "Generating KHQR...";
-        statusBox.style.background = "#fff3cd"; 
-        statusBox.style.color = "#856404";
-        statusBox.style.display = "inline-block";
-
-        const udid = document.getElementById('udidInput').value;
-        const email = document.getElementById('emailInput').value;
-
-        try {
-            const response = await fetch(`${API_BASE}/api/create-payment`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ udid: udid, email: email })
-            });
-            const data = await response.json();
-
-            if (data.success) {
-                window.currentOrderId = data.order_id;
-                
-                // Show QR
-                document.getElementById('qrLoading').style.display = 'none';
-                document.getElementById('qrImage').src = "data:image/png;base64," + data.qr_image;
-                document.getElementById('qrImage').style.display = 'block';
-                
-                statusBox.innerText = "ស្កេនដើម្បីបង់ប្រាក់";
-                statusBox.style.backgroundColor = "#e0f7fa";
-                statusBox.style.color = "#006064";
-
-                // SHOW MANUAL BUTTON IMMEDIATELY
-                btnManual.style.display = 'block';
-
-            } else {
-                alert("Error: " + (data.error || "Unknown Error"));
-                closeAllModals();
-            }
-        } catch (e) {
-            console.error(e);
-            alert("Connection Failed. Please check internet.");
-            closeAllModals();
-        }
-    }
-
-    // 🚀 FIXED MANUAL CONFIRM FUNCTION
-    async function manualConfirm() {
-        if (!window.currentOrderId) return;
-        
-        const btn = document.getElementById('btnManual');
-        if(btn) {
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
-            btn.disabled = true;
-            btn.style.opacity = "0.7";
-        }
-
-        try {
-            // Send Alert to Backend
-            await fetch(`${API_BASE}/api/confirm-manual`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ order_id: window.currentOrderId })
-            });
-            console.log("Sent manual confirm to server");
-        } catch (e) { 
-            console.error("Error sending alert:", e); 
-        }
-
-        // Close QR Modal
-        document.getElementById('qrModal').classList.remove('active');
-        
-        // Show Success Modal
-        showSuccessModal(true); 
-    }
-
-    function showSuccessModal(isManual) {
-        document.getElementById('qrModal').classList.remove('active');
-        const successModal = document.getElementById('successModal');
-        const title = document.getElementById('successTitle');
-        const desc = document.getElementById('successDesc');
-        const icon = document.getElementById('successIcon');
-
-        if (isManual) {
-            icon.innerHTML = '<i class="fas fa-clock" style="font-size:60px; color:#f39c12; margin-bottom:20px;"></i>';
-            title.innerText = "សំណើត្រូវបានទទួល (Received)";
-            desc.innerHTML = "សូមរង់ចាំ Admin ត្រួតពិនិត្យការបង់ប្រាក់។<br>Certificate នឹងផ្ញើទៅអ៊ីមែលរបស់អ្នកឆាប់ៗនេះ។";
-        } else {
-            icon.innerHTML = '<i class="fas fa-check-circle" style="font-size:60px; color:#27ae60; margin-bottom:20px;"></i>';
-            title.innerText = "ការបង់ប្រាក់ជោគជ័យ! (Success)";
-            desc.innerHTML = "យើងបានទទួលការបង់ប្រាក់របស់អ្នក។<br>សូមពិនិត្យអ៊ីមែលរបស់អ្នក។";
-        }
-
-        successModal.classList.add('active');
-    }
-
-    // ==========================================
-    // 5. SECURITY & UTILS
-    // ==========================================
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.onkeydown = function(e) {
-        if(e.keyCode == 123) return false;
-        if(e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) return false;
-        if(e.ctrlKey && e.keyCode == 85) return false;
+    box.querySelector("button").onclick = function () {
+        document.body.removeChild(overlay);
     };
-    // Function to Open About Modal
+}
+
+
+// This runs the moment Safari opens your website
+window.addEventListener('load', function() {
+    console.log("Page loaded. Checking for UDID in URL...");
+    const urlParams = new URLSearchParams(window.location.search);
+    const receivedUdid = urlParams.get('udid');
+
+    if (receivedUdid) {
+        const input = document.getElementById('udidInput');
+        if (input) {
+            input.value = receivedUdid;
+
+            // Update the visual status box
+            updateUDID(receivedUdid); 
+            
+            // Remove the UDID from the address bar
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // Styled friendly alert
+        showFriendlyAlert("យើងបានរកឃើញ UDID របស់អ្នក ហើយបញ្ចូលជូនដោយស្វ័យប្រវត្តិរួចរាល់។<br>សូមបន្តទៅជំហានបន្ទាប់។");
+        }
+    }
+});
+
+// ==========================================
+// 3. UI & MODAL FUNCTIONS
+// ==========================================
+function toggleMenu(show) {
+    const menu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('menuOverlay');
+    if (show) { 
+        menu.classList.add('active'); 
+        overlay.classList.add('active'); 
+    } else { 
+        menu.classList.remove('active'); 
+        overlay.classList.remove('active'); 
+    }
+}
+
 function showAbout() {
-    // Close the side menu first
-    toggleMenu(false); 
-    // Open the About Modal
+    toggleMenu(false);
     document.getElementById('aboutModal').classList.add('active');
 }
 
-// Function to Close Modal
 function closeAllModals() {
     document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
 }
-</script>
+
+// ==========================================
+// 4. INPUT VALIDATION
+// ==========================================
+function updateUDID(val) {
+    val = val.trim();
+    document.getElementById('udidInput').value = val;
+    const status = document.getElementById('udidStatus');
+    
+    if (val.length > 10) {
+        status.innerText = val;
+        status.style.color = "#00bcd4";
+    } else {
+        status.innerText = "Waiting for input...";
+        status.style.color = "#64748b";
+    }
+    validateForm();
+}
+
+function validateForm() {
+    const udid = document.getElementById('udidInput').value;
+    const checked = document.getElementById('termsCheck').checked;
+    const btn = document.getElementById('payBtn');
+    
+    // Activate the "Next Step" button only if UDID is long enough and checkbox is ticked
+    if (udid.length >= 20 && checked) {
+        btn.classList.add('active');
+    } else {
+        btn.classList.remove('active');
+    }
+}
+
+// This function is triggered by the "Continue to Payment" button
+function validateEmail() {
+    const email = document.getElementById('emailInput').value.trim();
+    
+    if (email === "" || !email.includes('@') || !email.includes('.')) {
+        alert("សូមបញ្ចូលអ៊ីមែលឱ្យបានត្រឹមត្រូវ! (ឧទាហរណ៍: name@gmail.com)");
+        return;
+    }
+
+    // If email is valid, close this modal and start generating the QR
+    document.getElementById('emailModal').classList.remove('active');
+    generateQR();
+}
+
+// ==========================================
+// 5. PAYMENT & QR LOGIC
+// ==========================================
+async function generateQR() {
+    // Show the QR modal and loading spinner
+    document.getElementById('qrModal').classList.add('active');
+    document.getElementById('qrLoading').style.display = 'block';
+    document.getElementById('qrImage').style.display = 'none';
+    document.getElementById('btnManual').style.display = 'none';
+
+    const statusBox = document.getElementById('paymentStatus');
+    statusBox.innerText = "Generating KHQR...";
+
+    const udid = document.getElementById('udidInput').value;
+    const email = document.getElementById('emailInput').value;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/create-payment`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ udid: udid, email: email })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            window.currentOrderId = data.order_id;
+            
+            // Hide loader and show Base64 QR image from backend
+            document.getElementById('qrLoading').style.display = 'none';
+            document.getElementById('qrImage').src = "data:image/png;base64," + data.qr_image;
+            document.getElementById('qrImage').style.display = 'block';
+            
+            statusBox.innerText = "ស្កេនដើម្បីបង់ប្រាក់";
+            document.getElementById('btnManual').style.display = 'block';
+        } else {
+            alert("Error generating QR: " + data.error);
+            closeAllModals();
+        }
+    } catch (e) {
+        console.error("Payment Error:", e);
+        alert("មិនអាចភ្ជាប់ទៅកាន់ Server បានទេ។");
+        closeAllModals();
+    }
+}
+
+async function manualConfirm() {
+    if (!window.currentOrderId) return;
+    
+    const btn = document.getElementById('btnManual');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> កំពុងផ្ញើ...';
+    btn.disabled = true;
+
+    try {
+        const response = await fetch(`${API_BASE}/api/confirm-manual`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ order_id: window.currentOrderId })
+        });
+        
+        // Hide QR Modal and show the Tada Success Modal
+        document.getElementById('qrModal').classList.remove('active');
+        document.getElementById('successModal').classList.add('active');
+    } catch (e) {
+        console.error("Confirm Error:", e);
+        alert("មានបញ្ហាក្នុងការផ្ញើការបញ្ជាក់។");
+        btn.innerHTML = '<i class="fas fa-check-circle"></i> ខ្ញុំបានបង់ប្រាក់រួចហើយ (Paid)';
+        btn.disabled = false;
+    }
+}
+// ==========================================
+// 6. SECURITY UTILS
+// ==========================================
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.onkeydown = function(e) {
+    if(e.keyCode == 123) return false;
+    if(e.ctrlKey && e.shiftKey && (e.keyCode == 73 || e.keyCode == 74 || e.keyCode == 67)) return false;
+    if(e.ctrlKey && e.keyCode == 85) return false;
+};
+    </script>
+  
 
 </body>
 </html>
