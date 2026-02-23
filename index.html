@@ -445,40 +445,25 @@ async function generateQR() {
 }
 
 async function manualConfirm() {
-    // Check if the Order ID was saved during the QR generation step
-    if (!window.currentOrderId) {
-        alert("Error: Order ID not found. Please refresh and try again.");
-        return;
-    }
+    if (!window.currentOrderId) return;
     
     const btn = document.getElementById('btnManual');
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> កំពុងផ្ញើ...';
     btn.disabled = true;
 
     try {
-        console.log("Sending confirmation for Order ID:", window.currentOrderId);
-        
         const response = await fetch(`${API_BASE}/api/confirm-manual`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ order_id: window.currentOrderId })
         });
         
-        const result = await response.json();
-
-        if (result.success) {
-            // Success: Show the Success Modal
-            document.getElementById('qrModal').classList.remove('active');
-            document.getElementById('successModal').classList.add('active');
-        } else {
-            // Backend returned an error (e.g., Order ID not in Database)
-            alert("Error: " + (result.error || "Unknown error"));
-            btn.innerHTML = '<i class="fas fa-check-circle"></i> ខ្ញុំបានបង់ប្រាក់រួចហើយ (Paid)';
-            btn.disabled = false;
-        }
+        // Hide QR Modal and show the Tada Success Modal
+        document.getElementById('qrModal').classList.remove('active');
+        document.getElementById('successModal').classList.add('active');
     } catch (e) {
         console.error("Confirm Error:", e);
-        alert("មិនអាចភ្ជាប់ទៅកាន់ Server បានទេ។");
+        alert("មានបញ្ហាក្នុងការផ្ញើការបញ្ជាក់។");
         btn.innerHTML = '<i class="fas fa-check-circle"></i> ខ្ញុំបានបង់ប្រាក់រួចហើយ (Paid)';
         btn.disabled = false;
     }
