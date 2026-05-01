@@ -1,0 +1,641 @@
+
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>UDID Finder – Irra </title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=Noto+Sans+Khmer:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: rgba(255,255,255,0.04);
+            --surface2: rgba(255,255,255,0.07);
+            --border: rgba(255,255,255,0.09);
+            --accent: #7c6dfa;
+            --accent2: #fa6d6d;
+            --green: #00e5a0;
+            --text: #f0f0f5;
+            --muted: rgba(240,240,245,0.45);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        html, body {
+            height: 100%;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Sora', 'Noto Sans Khmer', sans-serif;
+            overscroll-behavior: none;
+        }
+
+        body {
+            min-height: 100svh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: calc(var(--safe-top) + 24px) 20px calc(var(--safe-bottom) + 32px);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Background Effects */
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.18;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .blob1 { width: 320px; height: 320px; background: var(--accent); top: -80px; left: -100px; animation: blobMove 12s ease-in-out infinite; }
+        .blob2 { width: 240px; height: 240px; background: var(--accent2); bottom: 60px; right: -80px; animation: blobMove 15s ease-in-out infinite reverse; }
+        .blob3 { width: 180px; height: 180px; background: var(--green); top: 45%; left: 50%; transform: translate(-50%, -50%); animation: blobMove 18s ease-in-out infinite 3s; }
+
+        @keyframes blobMove {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(20px, -15px) scale(1.08); }
+            66% { transform: translate(-15px, 20px) scale(0.95); }
+        }
+
+        /* Noise texture */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0.4;
+        }
+
+        /* Wrapper */
+        .wrapper {
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Top Badge */
+        .top-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            padding: 6px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--muted);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 28px;
+        }
+        .top-badge .dot {
+            width: 6px; height: 6px;
+            background: var(--green);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--green);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+        /* Hero Section */
+        .hero {
+            margin-bottom: 32px;
+        }
+
+        .logo-wrap {
+            width: 86px; height: 86px;
+            border-radius: 22px;
+            background: linear-gradient(135deg, var(--accent), var(--accent2));
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 32px rgba(124,109,250,0.35);
+            position: relative;
+            overflow: hidden;
+        }
+        .logo-wrap::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2), transparent);
+        }
+        .logo-wrap img {
+            width: 80px; height: 80px;
+            border-radius: 16px;
+            object-fit: cover;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-wrap svg {
+            width: 38px; height: 38px;
+            fill: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        h1 {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text);
+            text-align: center;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+            margin-bottom: 10px;
+        }
+        h1 span {
+            background: linear-gradient(90deg, var(--accent), var(--accent2));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 13.5px;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.6;
+            font-family: 'Noto Sans Khmer', 'Sora', sans-serif;
+            font-weight: 400;
+        }
+
+        /* Steps Card */
+        .steps-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        .steps-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+        }
+
+        .steps-label {
+            font-size:15px;
+            font-weight: 700;
+            letter-spacing: 0.12em;
+            color: var(--accent);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .step {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .step:last-child { border-bottom: none; padding-bottom: 0; }
+        .step:first-of-type { padding-top: 0; }
+
+        .step-num {
+            min-width: 28px; height: 28px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--accent), #9c8dff);
+            color: #fff;
+            font-size: 12px;
+            font-weight: 800;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 12px rgba(124,109,250,0.3);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .step-text {
+            font-size: 13px;
+            color: rgba(240,240,245,0.8);
+            line-height: 1.5;
+            font-family: 'Noto Sans Khmer', 'Sora', sans-serif;
+        }
+
+        /* Main Button */
+        .btn-main {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 18px 24px;
+            background: linear-gradient(135deg, var(--accent) 0%, #9c6dfa 100%);
+            color: #fff;
+            border-radius: 18px;
+            font-size: 15px;
+            font-weight: 700;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            letter-spacing: 0.01em;
+            box-shadow: 0 8px 32px rgba(124,109,250,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
+            overflow: hidden;
+            -webkit-appearance: none;
+        }
+        .btn-main::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 60%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer { to { left: 200%; } }
+        .btn-main:active { transform: scale(0.97); box-shadow: 0 4px 16px rgba(124,109,250,0.3); }
+
+        .btn-icon {
+            width: 20px; height: 20px;
+            flex-shrink: 0;
+        }
+
+        /* Info row */
+        .info-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+        .info-chip {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 12px 10px;
+            text-align: center;
+        }
+        .info-chip .ic-icon {
+            font-size: 18px;
+            margin-bottom: 4px;
+        }
+        .info-chip .ic-label {
+            font-size: 10px;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .info-chip .ic-val {
+            font-size: 11px;
+            color: var(--text);
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        /* Result View */
+        #result-view {
+            display: none;
+            animation: slideUp 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .success-icon {
+            width: 64px; height: 64px;
+            background: rgba(0,229,160,0.12);
+            border: 1.5px solid rgba(0,229,160,0.3);
+            border-radius: 20px;
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 16px;
+            font-size: 28px;
+        }
+        .result-header h2 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            margin-bottom: 6px;
+        }
+        .result-header h2 span {
+            background: linear-gradient(90deg, var(--green), #00c87a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .result-header p {
+            font-size: 13px;
+            color: var(--muted);
+            font-family: 'Noto Sans Khmer', sans-serif;
+        }
+
+        .udid-card {
+            background: rgba(0,229,160,0.05);
+            border: 1.5px solid rgba(0,229,160,0.2);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+        }
+        .udid-card-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: var(--green);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .udid-card-label::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(0,229,160,0.2);
+        }
+        .udid-value {
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            word-break: break-all;
+            letter-spacing: 0.03em;
+            line-height: 1.7;
+        }
+
+        .btn-copy {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 17px 24px;
+            background: var(--green);
+            color: #0a0a0f;
+            border-radius: 18px;
+            font-size: 15px;
+            font-weight: 800;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(0,229,160,0.3);
+            transition: transform 0.15s, box-shadow 0.15s;
+            -webkit-appearance: none;
+        }
+        .btn-copy:active { transform: scale(0.97); }
+        .btn-copy.copied {
+            background: #fff;
+        }
+
+        .btn-back {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 14px 24px;
+            background: transparent;
+            color: var(--muted);
+            border-radius: 18px;
+            font-size: 13px;
+            font-weight: 600;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            margin-top: 10px;
+            -webkit-appearance: none;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 10.5px;
+            color: rgba(240,240,245,0.2);
+            font-weight: 600;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* Divider */
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 20px 0;
+        }
+
+        /* Safari warning */
+        .safari-warn {
+            background: rgba(250, 109, 109, 0.1);
+            border: 1px solid rgba(250, 109, 109, 0.25);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #fa9d9d;
+            font-family: 'Noto Sans Khmer', sans-serif;
+            line-height: 1.5;
+        }
+        .safari-warn .warn-icon { font-size: 16px; flex-shrink: 0; }
+
+        /* Animate in */
+        .wrapper > * {
+            opacity: 0;
+            animation: fadeUp 0.6s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        .wrapper > *:nth-child(1) { animation-delay: 0.05s; }
+        .wrapper > *:nth-child(2) { animation-delay: 0.15s; }
+        .wrapper > *:nth-child(3) { animation-delay: 0.25s; }
+        .wrapper > *:nth-child(4) { animation-delay: 0.35s; }
+        .wrapper > *:nth-child(5) { animation-delay: 0.45s; }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+       
+    </style>
+</head>
+<body>
+
+    <!-- BG Blobs -->
+    <div class="bg-blob blob1"></div>
+    <div class="bg-blob blob2"></div>
+    <div class="bg-blob blob3"></div>
+
+    <div class="wrapper">
+
+        <!-- === SETUP VIEW === -->
+        <div id="setup-view">
+
+            <!-- <div style="text-align:center">
+                <div class="top-badge">
+                    <span class="dot"></span>
+                    Irra UDID
+                </div>
+            </div> -->
+
+            <div class="hero">
+                <div class="logo-wrap">
+                    <img src="https://i.pinimg.com/originals/be/cb/ca/becbca09cc81c9ecd1ce133c836b3f25.gif" alt="Logo" onerror="this.style.display='none';this.parentElement.innerHTML='<svg viewBox=\'0 0 24 24\' fill=\'white\'><path d=\'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z\'/></svg>'">
+                </div>
+                <h1>ស្វែងរក <span>UDID</span><br>ទូរស័ព្ទអ្នក</h1>
+                <p class="subtitle" style="margin-top:10px">ស្វែងរកលេខ UDID ជំហានងាយស្រួល<br>សម្រាប់ iPhone & iPad</p>
+            </div>
+
+            <div class="safari-warn">
+                <span class="warn-icon">&#9432;</span>
+                <span>បញ្ជាក់​ត្រូវប្រើ Safari Browser ប៉ុណ្ណោះ ! ទើបអាចដំណើរការទាញយក Profile បាន.</span>
+            </div>
+
+            <div class="steps-card">
+                <div class="steps-label">&#128203;  របៀបប្រើ​:</div>
+                <div class="step">
+                    <div class="step-num">១</div>
+                    <div class="step-text">ចុចប៊ូតុង "ទាញយក Profile" ខាងក្រោម</div>
+                </div>
+                <div class="step">
+                    <div class="step-num">២</div>
+                    <div class="step-text">ចុច <strong>Allow</strong> រួចចូល Settings → Profile Downloaded → <strong>Install</strong></div>
+                </div>
+                <div class="step">
+                    <div class="step-num">៣</div>
+                    <div class="step-text">ប្រព័ន្ធនឹងនាំអ្នកត្រលប់មកវិញ ហើយបង្ហាញលេខ UDID ស្វ័យប្រវត្តិ</div>
+                </div>
+            </div>
+
+           <a href="/api/get-profile" class="btn-main">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                ទាញយក Profile
+            </a>
+
+            <!-- <div class="info-row">
+                <div class="info-chip">
+                    <div class="ic-icon">🔒</div>
+                    <div class="ic-label">Secure</div>
+                    <div class="ic-val">100% Safe</div>
+                </div>
+                <div class="info-chip">
+                    <div class="ic-icon">⚡</div>
+                    <div class="ic-label">Speed</div>
+                    <div class="ic-val">Instant</div>
+                </div>
+                <div class="info-chip">
+                    <div class="ic-icon">📱</div>
+                    <div class="ic-label">Works On</div>
+                    <div class="ic-val">iOS 12+</div>
+                </div>
+            </div> -->
+
+        </div>
+
+        <!-- === RESULT VIEW === -->
+        <div id="result-view">
+
+           <div class="result-header">
+    <div class="success-icon">&#10003;</div>
+    <h2>រកឃើញ <span>UDID!</span></h2>
+    <p>ចម្លងលេខ UDID ខាងក្រោម ហើយផ្ញើទៅ Irra </p>
+</div>
+
+            <div class="udid-card">
+                <div class="udid-card-label">UDID Device</div>
+                <div class="udid-value" id="udidDisplay">FETCHING...</div>
+            </div>
+
+            <button class="btn-copy" id="copyBtn" onclick="copyUDID()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+                ចម្លងយក UDID
+            </button>
+
+            <a href="https://t.me/irra_11" class="btn-back" target="_blank">
+   &#10140;ផ្ញើទៅកាន់ Admin Irra
+</a>
+
+        </div>
+
+        <div class="footer">Irra UDID Finder v2</div>
+
+    </div>
+
+    <script>
+        // Detect UDID from URL
+        window.addEventListener('DOMContentLoaded', function () {
+            const params = new URLSearchParams(window.location.search);
+            const udid = params.get('udid');
+
+            if (udid) {
+                document.getElementById('setup-view').style.display = 'none';
+                document.getElementById('result-view').style.display = 'block';
+                document.getElementById('udidDisplay').textContent = udid;
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+
+        function copyUDID() {
+            const udid = document.getElementById('udidDisplay').textContent;
+            const btn = document.getElementById('copyBtn');
+
+            const tryClipboard = () => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(udid).then(onCopied).catch(fallback);
+                } else {
+                    fallback();
+                }
+            };
+
+            const fallback = () => {
+                const ta = document.createElement('textarea');
+                ta.value = udid;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                try { document.execCommand('copy'); onCopied(); } catch (e) {}
+                document.body.removeChild(ta);
+            };
+
+            const onCopied = () => {
+                const orig = btn.innerHTML;
+                btn.innerHTML = '✓ &nbsp;បានចម្លងរួចរាល់!';
+                btn.classList.add('copied');
+                setTimeout(() => {
+                    btn.innerHTML = orig;
+                    btn.classList.remove('copied');
+                }, 2200);
+            };
+
+            tryClipboard();
+        }
+
+        function goBack() {
+            document.getElementById('result-view').style.display = 'none';
+            document.getElementById('setup-view').style.display = 'block';
+        }
+
+        // Disable dev tools shortcuts
+        document.onkeydown = e => {
+            if (e.keyCode === 123) return false;
+            if (e.ctrlKey && e.shiftKey && [73,67,74].includes(e.keyCode)) return false;
+            if (e.ctrlKey && e.keyCode === 85) return false;
+        };
+
+        // Prevent context menu
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
