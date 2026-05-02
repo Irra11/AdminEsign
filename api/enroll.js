@@ -19,7 +19,7 @@ export default function handler(req, res) {
       const udid = match[1];
 
       // 🔴 CHANGE THIS to your real Vercel domain
-      const FRONTEND_URL = "https://www.irraesign.store/";
+      const FRONTEND_URL = "https://www.irraesign.store/install-udid/";
 
       res.writeHead(301, {
         Location: `${FRONTEND_URL}?udid=${udid}`,
