@@ -17,7 +17,7 @@ export default function handler(req, res) {
 
     if (match) {
       const udid = match[1];
-      const FRONTEND_URL = "https://www.irraesign.store/";
+      const FRONTEND_URL = "https://www.irraesign.store/install-udid/";
 
       // Redirect user back to your site with the UDID in the URL
       res.writeHead(301, {
