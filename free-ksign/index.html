@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESign - App Store</title>
+    <style>
+        /* CSS - iOS interface styling */
+        :root {
+            --ios-blue: #007aff;
+            --ios-purple: #5856d6;
+            --ios-grey-text: #8e8e93;
+            --ios-divider: #e5e5ea;
+            --ios-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f2f2f7; 
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 10px;
+            
+            /* --- PROTECTION CSS: PREVENT TEXT SELECTION --- */
+            -webkit-user-select: none; /* Safari */
+            -moz-user-select: none; /* Firefox */
+            -ms-user-select: none; /* IE10+/Edge */
+            user-select: none; /* Standard */
+            -webkit-touch-callout: none; /* iOS Safari */
+        }
+
+        .app-page {
+            background-color: var(--ios-bg);
+            width: 100%;
+            max-width: 390px;
+            min-height: 100vh;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border-radius: 40px; 
+            overflow-y: auto;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 25px;
+        }
+
+        .app-icon-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 22px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            object-fit: cover;
+            pointer-events: none; /* Prevents dragging the image */
+        }
+
+        .title-area {
+            flex: 1;
+            padding-left: 15px;
+        }
+
+        .title-area h1 {
+            margin: 0 0 10px 0;
+            font-size: 22px;
+            font-weight: 700;
+        }
+
+        #install-btn {
+            background-color: var(--ios-purple);
+            color: white;
+            border: none;
+            padding: 8px 24px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 120px;
+        }
+
+        .share-btn {
+            color: var(--ios-blue);
+            margin-top: 5px;
+        }
+
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-column {
+            flex: 1;
+            border-right: 1px solid var(--ios-divider);
+        }
+
+        .stat-column:last-child {
+            border-right: none;
+        }
+
+        .stat-label {
+            display: block;
+            font-size: 10px;
+            color: var(--ios-grey-text);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            font-size: 19px;
+            font-weight: 700;
+            color: #48484a;
+        }
+
+        .stars {
+            color: var(--ios-grey-text);
+            font-size: 11px;
+        }
+
+        .stat-sub {
+            font-size: 11px;
+            color: var(--ios-grey-text);
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid var(--ios-divider);
+            margin: 15px 0;
+        }
+
+        .section-header h2 {
+            font-size: 20px;
+            margin: 0 0 10px 0;
+        }
+
+        .blue-link {
+            color: var(--ios-blue);
+            text-decoration: none;
+            font-size: 15px;
+        }
+
+        .version-info {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--ios-grey-text);
+            margin-bottom: 10px;
+        }
+
+        .dev-name {
+            color: var(--ios-grey-text);
+            font-size: 14px;
+            margin: 5px 0;
+        }
+
+        /* Footer Summary Styling */
+        .footer-summary {
+            margin-top: 40px;
+            padding: 20px 0 40px 0;
+            text-align: center;
+            border-top: 1px solid var(--ios-divider);
+        }
+
+        .footer-summary p {
+            margin: 5px 0;
+            color: var(--ios-grey-text);
+            font-size: 13px;
+            font-weight: 400;
+        }
+
+        .footer-highlight {
+            font-weight: 600;
+            color: #555;
+        }
+    </style>
+</head>
+<!-- Prevent right click on body load -->
+<body oncontextmenu="return false;">
+
+    <div class="app-page">
+        <!-- Header -->
+        <div class="header">
+            <img src="https://i.postimg.cc/fLk2HCyk/IMG-3180.jpg" alt="ESign Icon" class="app-icon-img">
+            
+            <div class="title-area">
+                <h1>KSign</h1>
+                <button id="install-btn" onclick="startInstall()">Install</button>
+            </div>
+            <div class="share-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><polyline points="16 6 12 2 8 6"></polyline><line x1="12" y1="2" x2="12" y2="15"></line></svg>
+            </div>
+        </div>
+
+        <!-- Stats Bar -->
+        <div class="stats-row">
+            <div class="stat-column">
+                <span class="stat-label">10762 REVIEWS</span>
+                <span class="stat-value">4.2</span>
+                <div class="stars">★★★★☆</div>
+            </div>
+            <div class="stat-column">
+                <span class="stat-label">AGE RATING</span>
+                <span class="stat-value">17+</span>
+                <span class="stat-sub">Year Old</span>
+            </div>
+            <div class="stat-column">
+                <span class="stat-label">LANGUAGES</span>
+                <span class="stat-value">English</span>
+                <span class="stat-sub">+ 18 More</span>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <div class="section-header" style="display:flex; justify-content: space-between; align-items: baseline;">
+                <h2>What's New</h2>
+                <a href="#" class="blue-link">Version History</a>
+            </div>
+            <div class="version-info">
+                <span>5.0.2</span>
+                <span>Jul 23, 2025</span>
+            </div>
+            <p class="dev-name">New Ksign Free</p>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2>Preview</h2>
+            <p class="dev-name" style="color:#000; font-size:13px; font-weight:500;">iPhone, iPad, Apple Watch App</p>
+        </div>
+
+        <!-- Footer Section -->
+        <footer class="footer-summary">
+            <p class="footer-highlight"> Esign</p>
+            <p> Developer by <span class="footer-highlight">Irra Esign</span></p>
+        </footer>
+    </div>
+
+    <script>
+        function startInstall() {
+            const btn = document.getElementById('install-btn');
+            const targetUrl = "https://api.khoindvn.io.vn/a71JoP";
+
+            btn.innerText = "Installing...";
+            btn.style.opacity = "0.7";
+            btn.disabled = true;
+
+            // Auto redirect after 1.5 seconds
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 1500);
+        }
+
+        // --- PROTECTION SCRIPT ---
+        
+        // 1. Disable Right Click
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // 2. Disable Keyboard Shortcuts (F12, Ctrl+U, Ctrl+Shift+I)
+        document.onkeydown = function(e) {
+            if(event.keyCode == 123) { // F12
+                return false;
+            }
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) { // Ctrl+Shift+I
+                return false;
+            }
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) { // Ctrl+Shift+C
+                return false;
+            }
+            if(e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) { // Ctrl+Shift+J
+                return false;
+            }
+            if(e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) { // Ctrl+U
+                return false;
+            }
+        }
+    </script>
+
+</body>
+</html>
